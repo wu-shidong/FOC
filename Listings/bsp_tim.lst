@@ -1,0 +1,45 @@
+C251 COMPILER V5.60.0,  bsp_tim                                                            27/06/23  22:21:38  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_tim
+OBJECT MODULE PLACED IN .\Objects\bsp_tim.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Bsp\bsp_tim.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componen
+                    -ets;.\Lib) DEBUG PRINT(.\Listings\bsp_tim.lst) TABS(2) OBJECT(.\Objects\bsp_tim.obj) 
+
+stmt  level    source
+
+    1          #include "bsp_tim.h"
+    2          
+    3          
+    4          
+    5          void set_duty_cycle(float ref_val,float max_val)
+    6          {
+    7   1        int PWM=0;
+    8   1        
+    9   1        PWM=ref_val/max_val;
+   10   1        
+   11   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =         1     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,32 @@
+C251 COMPILER V5.60.0,  Delay                                                              27/06/23  21:41:17  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE Delay
+OBJECT MODULE PLACED IN .\Objects\Delay.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Application\Delay.c XSMALL INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\C
+                    -omponenets) DEBUG PRINT(.\Listings\Delay.lst) TABS(2) OBJECT(.\Objects\Delay.obj) 
+
+stmt  level    source
+
+    1          #include "Delay.h"
+    2          #include "main.h"
+    3          //========================================================================
+    4          // 函数: void  delay_ms(unsigned char ms)
+    5          // 描述: 延时函数。
+    6          // 参数: ms,要延时的ms数, 这里只支持1~255ms. 自动适应主时钟.
+    7          // 返回: none.
+    8          // 版本: VER1.0
+    9          // 日期: 2013-4-1
+   10          // 备注: 
+   11          //========================================================================
+   12          void delay_ms(unsigned char ms)
+   13          {
+   14   1           unsigned int i;
+   15   1           do{
+   16   2                i = MAIN_Fosc / 6000;
+*** ERROR C67 IN LINE 16 OF Application\Delay.c: 'MAIN_Fosc': undefined identifier
+   17   2                while(--i);
+   18   2           }while(--ms);
+   19   1      }
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)

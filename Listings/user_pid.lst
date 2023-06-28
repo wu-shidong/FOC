@@ -1,0 +1,98 @@
+C251 COMPILER V5.60.0,  user_pid                                                           27/06/23  22:21:38  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE user_pid
+OBJECT MODULE PLACED IN .\Objects\user_pid.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Componenets\user_pid.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.
+                    -\Componenets;.\Lib) DEBUG PRINT(.\Listings\user_pid.lst) TABS(2) OBJECT(.\Objects\user_pid.obj) 
+
+stmt  level    source
+
+    1          /****************************************************************************
+    2           *  Copyright (C) 2018 RoboMaster.
+    3           *
+    4           *  This program is free software: you can redistribute it and/or modify
+    5           *  it under the terms of the GNU General Public License as published by
+    6           *  the Free Software Foundation, either version 3 of the License, or
+    7           *  (at your option) any later version.
+    8           *
+    9           *  This program is distributed in the hope that it will be useful,
+   10           *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+   11           *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   12           *  GNU General Public License for more details.
+   13           *
+   14           *  You should have received a copy of the GNU General Public License
+   15           *  along with this program. If not, see <http://www.gnu.org/licenses/>.
+   16           ***************************************************************************/
+   17           
+   18          #include "user_pid.h"
+   19          
+   20          /**
+   21            * @brief  init pid parameter
+   22            * @param  pid struct
+   23              @param  parameter
+   24            * @retval None
+   25            */
+   26          void pid_init(pid_struct_t *pid,
+   27                        float kp,
+   28                        float ki,
+   29                        float kd,
+   30                        float i_max,
+   31                        float out_max)
+   32          {
+   33   1        pid->kp      = kp;
+   34   1        pid->ki      = ki;
+   35   1        pid->kd      = kd;
+   36   1        pid->i_max   = i_max;
+   37   1        pid->out_max = out_max;
+   38   1      }
+   39          
+   40          /**
+   41            * @brief  pid calculation
+   42            * @param  pid struct
+   43              @param  reference value
+   44              @param  feedback value
+   45            * @retval calculation result
+   46            */
+   47          float pid_calc(pid_struct_t *pid, float ref, float fdb)
+   48          {
+   49   1        pid->ref = ref;
+   50   1        pid->fdb = fdb;
+   51   1        pid->err[1] = pid->err[0];
+   52   1        pid->err[0] = pid->ref - pid->fdb;
+   53   1        
+   54   1        pid->p_out  = pid->kp * pid->err[0];
+   55   1        pid->i_out += pid->ki * pid->err[0];
+   56   1        pid->d_out  = pid->kd * (pid->err[0] - pid->err[1]);
+   57   1        LIMIT_MIN_MAX(pid->i_out, -pid->i_max, pid->i_max);
+   58   1        
+C251 COMPILER V5.60.0,  user_pid                                                           27/06/23  22:21:38  PAGE 2   
+
+   59   1        pid->output = pid->p_out + pid->i_out + pid->d_out;
+   60   1        LIMIT_MIN_MAX(pid->output, -pid->out_max, pid->out_max);
+   61   1        return pid->output;
+   62   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       446     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------         20
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
