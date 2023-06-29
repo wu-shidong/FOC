@@ -1,0 +1,94 @@
+C251 COMPILER V5.60.0,  bsp_pwm                                                            28/06/23  22:56:28  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_pwm
+OBJECT MODULE PLACED IN .\Objects\bsp_pwm.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Bsp\bsp_pwm.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componen
+                    -ets;.\Lib) DEBUG PRINT(.\Listings\bsp_pwm.lst) TABS(2) OBJECT(.\Objects\bsp_pwm.obj) 
+
+stmt  level    source
+
+    1          #include "bsp_pwm.h"
+    2          #include  "STC32G_NVIC.h"
+    3          
+    4          PWMx_Duty PWMA_Duty;
+    5          //UpdatePwm(PWMA, &PWMA_Duty);
+    6          void  PWM_config(void)
+    7          {
+    8   1        PWMx_InitDefine   PWMx_InitStructure;
+    9   1        
+   10   1        PWMA_Duty.PWM1_Duty = 128;
+   11   1        PWMA_Duty.PWM2_Duty = 256;
+   12   1        PWMA_Duty.PWM3_Duty = 512;
+   13   1      //  PWMA_Duty.PWM4_Duty = 1024;
+   14   1      
+   15   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+   16   1        PWMx_InitStructure.PWM_Duty    = PWMA_Duty.PWM1_Duty; //PWM占空比时间, 0~Period
+   17   1        PWMx_InitStructure.PWM_EnoSelect   = ENO1P | ENO1N; //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,
+             -ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+   18   1        PWM_Configuration(PWM1, &PWMx_InitStructure);       //初始化PWM1
+   19   1      
+   20   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+   21   1        PWMx_InitStructure.PWM_Duty    = PWMA_Duty.PWM2_Duty; //PWM占空比时间, 0~Period
+   22   1        PWMx_InitStructure.PWM_EnoSelect   = ENO2P | ENO2N; //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,
+             -ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+   23   1        PWM_Configuration(PWM2, &PWMx_InitStructure);       //初始化PWM2
+   24   1      
+   25   1        PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_IN
+             -VALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+   26   1        PWMx_InitStructure.PWM_Duty    = PWMA_Duty.PWM3_Duty; //PWM占空比时间, 0~Period
+   27   1        PWMx_InitStructure.PWM_EnoSelect   = ENO3P | ENO3N; //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3N,
+             -ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+   28   1        PWM_Configuration(PWM3, &PWMx_InitStructure);       //初始化PWM3
+   29   1      
+   30   1      //  PWMx_InitStructure.PWM_Mode    =  CCMRn_PWM_MODE1;  //模式,   CCMRn_FREEZE,CCMRn_MATCH_VALID,CCMRn_MATCH_
+             -INVALID,CCMRn_ROLLOVER,CCMRn_FORCE_INVALID,CCMRn_FORCE_VALID,CCMRn_PWM_MODE1,CCMRn_PWM_MODE2
+   31   1      //  PWMx_InitStructure.PWM_Duty    = PWMA_Duty.PWM4_Duty; //PWM占空比时间, 0~Period
+   32   1      //  PWMx_InitStructure.PWM_EnoSelect   = ENO4P | ENO4N; //输出通道选择, ENO1P,ENO1N,ENO2P,ENO2N,ENO3P,ENO3
+             -N,ENO4P,ENO4N / ENO5P,ENO6P,ENO7P,ENO8P
+   33   1      //  PWM_Configuration(PWM4, &PWMx_InitStructure);       //初始化PWM4
+   34   1      
+   35   1        PWMx_InitStructure.PWM_Period   = 2047;             //周期时间,   0~65535
+   36   1        PWMx_InitStructure.PWM_DeadTime = 0;                //死区发生器设置, 0~255
+   37   1        PWMx_InitStructure.PWM_MainOutEnable= ENABLE;       //主输出使能, ENABLE,DISABLE
+   38   1        PWMx_InitStructure.PWM_CEN_Enable   = ENABLE;       //使能计数器, ENABLE,DISABLE
+   39   1        PWM_Configuration(PWMA, &PWMx_InitStructure);       //初始化PWM通用寄存器,  PWMA,PWMB
+   40   1      
+   41   1        PWM1_USE_P60P61();
+   42   1        PWM2_USE_P62P63();
+   43   1        PWM3_USE_P64P65();
+   44   1      //  PWM4_USE_P66P67();
+   45   1        NVIC_PWM_Init(PWMA,DISABLE,Priority_0);
+   46   1      }
+   47          
+   48          
+   49          
+   50          
+C251 COMPILER V5.60.0,  bsp_pwm                                                            28/06/23  22:56:28  PAGE 2   
+
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       226     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        16          9
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

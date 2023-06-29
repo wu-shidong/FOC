@@ -354,6 +354,16 @@
               <FileType>1</FileType>
               <FilePath>.\Bsp\bsp_uart.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Bsp\bsp_tim.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Bsp\bsp_pwm.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -393,6 +403,26 @@
               <FileName>STC32G_UART_Isr.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Lib\STC32G_UART_Isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_Timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_Timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_Timer_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_Timer_Isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_PWM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_PWM.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_PWM_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_PWM_Isr.c</FilePath>
             </File>
           </Files>
         </Group>

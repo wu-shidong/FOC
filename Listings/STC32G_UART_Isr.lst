@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  11:21:05  PAGE 1   
+C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  22:56:29  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE STC32G_UART_Isr
@@ -66,7 +66,7 @@ stmt  level    source
    56   2          TI = 0;
    57   2          
    58   2              #if(UART_QUEUE_MODE == 1)   //判断是否使用队列模式
-C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  11:21:05  PAGE 2   
+C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  22:56:29  PAGE 2   
 
    59   2          if(COM1.TX_send != COM1.TX_write)
    60   2          {
@@ -134,7 +134,7 @@ stmt  level    source
   122   1      }
   123          #endif
   124          
-C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  11:21:05  PAGE 3   
+C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  22:56:29  PAGE 3   
 
   125          //========================================================================
   126          // 函数: UART3_ISR_Handler
@@ -202,7 +202,7 @@ stmt  level    source
   188   3            S4BUF = TX4_Buffer[COM4.TX_send];
   189   3            if(++COM4.TX_send >= COM_TX4_Lenth)   COM4.TX_send = 0;
   190   3          }
-C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  11:21:05  PAGE 4   
+C251 COMPILER V5.60.0,  STC32G_UART_Isr                                                    28/06/23  22:56:29  PAGE 4   
 
   191   2          else  COM4.B_TX_busy = 0;
   192   2              #else

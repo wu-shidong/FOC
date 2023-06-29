@@ -2,12 +2,18 @@
 ".\Objects\user_pid.obj",
 ".\Objects\bsp_gpio.obj",
 ".\Objects\bsp_uart.obj",
+".\Objects\bsp_tim.obj",
+".\Objects\bsp_pwm.obj",
 ".\Objects\BLDC.obj",
 ".\Objects\STC32G_Delay.obj",
 ".\Objects\STC32G_GPIO.obj",
 ".\Objects\STC32G_NVIC.obj",
 ".\Objects\STC32G_UART.obj",
-".\Objects\STC32G_UART_Isr.obj" 
+".\Objects\STC32G_UART_Isr.obj",
+".\Objects\STC32G_Timer.obj",
+".\Objects\STC32G_Timer_Isr.obj",
+".\Objects\STC32G_PWM.obj",
+".\Objects\STC32G_PWM_Isr.obj" 
 TO ".\Objects\FOC" 
 PRINT(".\Listings\FOC.map") CASE DISABLEWARNING (57) 
 CLASSES (EDATA (0x0-0xFFF), 

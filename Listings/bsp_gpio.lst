@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  bsp_gpio                                                           28/06/23  10:55:01  PAGE 1   
+C251 COMPILER V5.60.0,  bsp_gpio                                                           28/06/23  22:56:28  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_gpio
@@ -21,22 +21,34 @@ stmt  level    source
              -O_OUT_PP
    10   1        GPIO_Inilize(GPIO_P6,&GPIO_InitStructure);  //初始化
    11   1      
-   12   1        GPIO_InitStructure.Pin  = GPIO_Pin_0;       //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7, 或操作
-   13   1        GPIO_InitStructure.Mode = GPIO_PullUp;      //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPI
-             -O_OUT_PP
-   14   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //初始化
-   15   1        
-   16   1      
-   17   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
-   18   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_
+   12   1      //UART1
+   13   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+   14   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_
              -OUT_PP
-   19   1        GPIO_Inilize(GPIO_P3,&GPIO_InitStructure);  //初始化
-   20   1      }
+   15   1        GPIO_Inilize(GPIO_P3,&GPIO_InitStructure);  //初始化
+   16   1        
+   17   1      //UART2 P4_6:RX P4_7:TX
+   18   1        GPIO_InitStructure.Pin  = GPIO_Pin_6 | GPIO_Pin_7;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+   19   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_
+             -OUT_PP
+   20   1        GPIO_Inilize(GPIO_P4,&GPIO_InitStructure);  //初始化
+   21   1        
+   22   1        
+   23   1      //UART3
+   24   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+   25   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_
+             -OUT_PP
+   26   1        GPIO_Inilize(GPIO_P0,&GPIO_InitStructure);  //初始化  
+   27   1        
+   28   1        
+   29   1        
+   30   1        
+   31   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =        72     ------
+  code size            =        94     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------

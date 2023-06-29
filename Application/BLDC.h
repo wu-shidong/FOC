@@ -9,7 +9,7 @@ typedef struct
 	unsigned char pole_pairs;	//电机极对数
 	
 	float shaft_angle;//位差角
-	float oplp_timestamp;//开环计算周期时间
+	unsigned int oplp_timestamp;//开环计算周期时间
 
 	float Uq;//帕克逆变换电压q
 	float Ud;//帕克逆变换电压d

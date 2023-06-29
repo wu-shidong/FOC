@@ -1,0 +1,1 @@
+"Lib\STC32G_Timer_Isr.c" LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\Lib) DEBUG PRINT(.\Listings\STC32G_Timer_Isr.lst) TABS (2) OBJECT(.\Objects\STC32G_Timer_Isr.obj)

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  bsp_tim                                                            27/06/23  22:21:38  PAGE 1   
+C251 COMPILER V5.60.0,  bsp_tim                                                            28/06/23  22:56:28  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_tim
@@ -9,26 +9,116 @@ COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Bsp\bsp_tim.c LARGE INTR2 BROW
 stmt  level    source
 
     1          #include "bsp_tim.h"
-    2          
-    3          
-    4          
-    5          void set_duty_cycle(float ref_val,float max_val)
-    6          {
-    7   1        int PWM=0;
-    8   1        
-    9   1        PWM=ref_val/max_val;
-   10   1        
-   11   1      }
+    2          #include  "config.h"
+    3          #include  "STC32G_NVIC.h"
+    4          #include  "STC32G_Timer.h"
+    5          
+    6          /*************  功能说明  **************
+    7          
+    8          程序演示5个定时器的使用, 均使用16位自动重装.
+    9          
+   10          定时器0做16位自动重装, 中断频率为100000Hz，中断函数从P6.7取反输出50KHz方波信号.
+   11          
+   12          定时器1做16位自动重装, 中断频率为10000Hz，中断函数从P6.6取反输出5KHz方波信号.
+   13          
+   14          定时器2做16位自动重装, 中断频率为1000Hz，中断函数从P6.5取反输出500Hz方波信号.
+   15          
+   16          定时器3做16位自动重装, 中断频率为100Hz，中断函数从P6.4取反输出50Hz方波信号.
+   17          
+   18          定时器4做16位自动重装, 中断频率为50Hz，中断函数从P6.3取反输出25Hz方波信号.
+   19          
+   20          下载时, 选择时钟 24MHz (可以在配置文件"config.h"中修改).
+   21          
+   22          ******************************************/
+   23          
+   24          
+   25          void  Timer_config(void)
+   26          {
+   27   1        
+   28   1        TIM_InitTypeDef   TIM_InitStructure;            //结构定义
+   29   1        TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //指定工作模式,   TIM_16BitAutoReload,TIM_16Bit,T
+             -IM_8BitAutoReload,TIM_16BitAutoReloadNoMask
+   30   1        TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_12T;    //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK
+             -_Ext
+   31   1        TIM_InitStructure.TIM_ClkOut    = DISABLE;        //是否输出高速脉冲, ENABLE或DISABLE
+   32   1        TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / 1000UL));    //中断频率, 1000次/秒
+   33   1        TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   34   1        Timer_Inilize(Timer0,&TIM_InitStructure);         //初始化Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+   35   1        NVIC_Timer0_Init(ENABLE,Priority_0);    //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1,P
+             -riority_2,Priority_3 
+   36   1        
+   37   1      
+   38   1        
+   39   1      
+   40   1        
+   41   1        
+   42   1        
+   43   1        
+   44   1      //  TIM_InitTypeDef   TIM_InitStructure;            //结构定义
+   45   1      //  TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //指定工作模式,   TIM_16BitAutoReload,TIM_16Bit
+             -,TIM_8BitAutoReload,TIM_16BitAutoReloadNoMask
+   46   1      //  TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOC
+             -K_Ext
+   47   1      //  TIM_InitStructure.TIM_ClkOut    = DISABLE;        //是否输出高速脉冲, ENABLE或DISABLE
+   48   1      //  TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / 1000000UL));   //初值,
+   49   1      //  TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   50   1      //  Timer_Inilize(Timer0,&TIM_InitStructure);         //初始化Timer0    Timer0,Timer1,Timer2,Timer3,Timer4
+   51   1      //  NVIC_Timer0_Init(ENABLE,Priority_0);    //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1
+             -,Priority_2,Priority_3
+   52   1      
+C251 COMPILER V5.60.0,  bsp_tim                                                            28/06/23  22:56:28  PAGE 2   
+
+   53   1      //  TIM_InitStructure.TIM_Mode      = TIM_16BitAutoReload;  //指定工作模式,   TIM_16BitAutoReload,TIM_16Bit
+             -,TIM_8BitAutoReload,TIM_16BitAutoReloadNoMask
+   54   1      //  TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //指定时钟源, TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOCK_Ex
+             -t
+   55   1      //  TIM_InitStructure.TIM_ClkOut    = DISABLE;        //是否输出高速脉冲, ENABLE或DISABLE
+   56   1      //  TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / 10000));     //初值,
+   57   1      //  TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   58   1      //  Timer_Inilize(Timer1,&TIM_InitStructure);         //初始化Timer1    Timer0,Timer1,Timer2,Timer3,Timer4
+   59   1      //  NVIC_Timer1_Init(ENABLE,Priority_0);    //中断使能, ENABLE/DISABLE; 优先级(低到高) Priority_0,Priority_1
+             -,Priority_2,Priority_3
+   60   1      
+   61   1      //  TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_1T;   //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOC
+             -K_Ext
+   62   1      //  TIM_InitStructure.TIM_ClkOut    = DISABLE;        //是否输出高速脉冲, ENABLE或DISABLE
+   63   1      //  TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / 1000));        //初值
+   64   1      //  TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   65   1      //  Timer_Inilize(Timer2,&TIM_InitStructure);         //初始化Timer2    Timer0,Timer1,Timer2,Timer3,Timer4
+   66   1      //  NVIC_Timer2_Init(ENABLE,NULL);    //中断使能, ENABLE/DISABLE; 无优先级
+   67   1      
+   68   1      //  TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_12T;  //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOC
+             -K_Ext
+   69   1      //  TIM_InitStructure.TIM_ClkOut    = ENABLE;         //是否输出高速脉冲, ENABLE或DISABLE
+   70   1      //  TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / (100*12)));    //初值
+   71   1      //  TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   72   1      //  Timer_Inilize(Timer3,&TIM_InitStructure);         //初始化Timer3    Timer0,Timer1,Timer2,Timer3,Timer4
+   73   1      //  NVIC_Timer3_Init(ENABLE,NULL);    //中断使能, ENABLE/DISABLE; 无优先级
+   74   1      
+   75   1      //  TIM_InitStructure.TIM_ClkSource = TIM_CLOCK_12T;  //指定时钟源,     TIM_CLOCK_1T,TIM_CLOCK_12T,TIM_CLOC
+             -K_Ext
+   76   1      //  TIM_InitStructure.TIM_ClkOut    = ENABLE;         //是否输出高速脉冲, ENABLE或DISABLE
+   77   1      //  TIM_InitStructure.TIM_Value     = (u16)(65536UL - (MAIN_Fosc / (50*12)));   //初值
+   78   1      //  TIM_InitStructure.TIM_Run       = ENABLE;         //是否初始化后启动定时器, ENABLE或DISABLE
+   79   1      //  Timer_Inilize(Timer4,&TIM_InitStructure);         //初始化Timer4    Timer0,Timer1,Timer2,Timer3,Timer4
+   80   1      //  NVIC_Timer4_Init(ENABLE,NULL);    //中断使能, ENABLE/DISABLE; 无优先级
+   81   1      }
+   82          
+   83          
+   84          
+   85          
+   86          
+   87          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =         1     ------
+  code size            =        48     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =    ------     ------
+  xdata size           =    ------          6
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------

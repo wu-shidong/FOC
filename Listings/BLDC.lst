@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  BLDC                                                               28/06/23  11:06:06  PAGE 1   
+C251 COMPILER V5.60.0,  BLDC                                                               29/06/23  12:31:39  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE BLDC
@@ -12,109 +12,98 @@ stmt  level    source
     2          #include <MATH.H>
     3          #include <stdio.h>
     4          #include "user_pid.h"
-    5          //³õÊ¼±äÁ¿¼°º¯Êı¶¨Òå
-    6          //ºê¶¨ÒåÊµÏÖµÄÒ»¸öÔ¼Êøº¯Êı,ÓÃÓÚÏŞÖÆÒ»¸öÖµµÄ·¶Î§¡£
-    7          //¾ßÌåÀ´Ëµ£¬¸Ãºê¶¨ÒåµÄÃû³ÆÎª _constrain£¬½ÓÊÜÈı¸ö²ÎÊı amt¡¢low ºÍ high£¬·Ö±ğ±íÊ¾ÒªÏŞÖÆµÄÖµ¡¢×îĞ¡ÖµºÍ×î´óÖ
+    5          #include "bsp_pwm.h"
+*** WARNING C317 IN LINE 40 OF type_def.h: attempt to redefine macro 'NULL'
+    6          //³õÊ¼±äÁ¿¼°º¯Êı¶¨Òå
+    7          //ºê¶¨ÒåÊµÏÖµÄÒ»¸öÔ¼Êøº¯Êı,ÓÃÓÚÏŞÖÆÒ»¸öÖµµÄ·¶Î§¡£
+    8          //¾ßÌåÀ´Ëµ£¬¸Ãºê¶¨ÒåµÄÃû³ÆÎª _constrain£¬½ÓÊÜÈı¸ö²ÎÊı amt¡¢low ºÍ high£¬·Ö±ğ±íÊ¾ÒªÏŞÖÆµÄÖµ¡¢×îĞ¡ÖµºÍ×î´óÖ
              -µ¡£¸Ãºê¶¨ÒåµÄÊµÏÖÊ¹ÓÃÁËÈıÔªÔËËã·û£¬¸ù¾İ amt ÊÇ·ñĞ¡ÓÚ low »ò´óÓÚ high£¬·µ»ØÆäÖĞµÄ×î´ó»ò×îĞ¡Öµ£¬»òÕß·µ»ØÔ­Öµ¡£
-    8          #define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-    9          #define PI 3.14159f
-   10          
-   11          BLDC bldc_oplp;//¿ª»·¿ØÖÆ
-   12          
-   13          void bldc_openloop_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
-   14          {
-   15   1        //ÊäÈëµçÔ´µçÑ¹
-   16   1        bldc_init->voltage_power_supply=voltage_power_supply;
-   17   1      
-   18   1        //µç»ú¼«¶ÔÊı
-   19   1        bldc_init->pole_pairs=pole_pairs;
-   20   1      
-   21   1        //Î»²î½ÇÎª0
-   22   1        bldc_init->shaft_angle=0;
-   23   1        // Ê¹ÓÃÔçÇ°ÉèÖÃµÄvoltage_power_supplyµÄ1/3×÷ÎªUqÖµ£¬Õâ¸öÖµ»áÖ±½ÓÓ°ÏìÊä³öÁ¦¾Ø
-   24   1        // ×î´óÖ»ÄÜÉèÖÃÎªUq = voltage_power_supply/2£¬·ñÔòua,ub,uc»á³¬³ö¹©µçµçÑ¹ÏŞ·ù
-   25   1        bldc_init->Uq = bldc_init->voltage_power_supply/3;
-   26   1      }
-   27          
+    9          #define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+   10          #define PI 3.14159f
+   11          u16 Ts;
+   12          BLDC bldc_oplp;//¿ª»·¿ØÖÆ
+   13          
+   14          void bldc_openloop_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
+   15          {
+   16   1        //ÊäÈëµçÔ´µçÑ¹
+   17   1        bldc_init->voltage_power_supply=voltage_power_supply;
+   18   1      
+   19   1        //µç»ú¼«¶ÔÊı
+   20   1        bldc_init->pole_pairs=pole_pairs;
+   21   1      
+   22   1        //Î»²î½ÇÎª0
+   23   1        bldc_init->shaft_angle=0;
+   24   1        // Ê¹ÓÃÔçÇ°ÉèÖÃµÄvoltage_power_supplyµÄ1/3×÷ÎªUqÖµ£¬Õâ¸öÖµ»áÖ±½ÓÓ°ÏìÊä³öÁ¦¾Ø
+   25   1        // ×î´óÖ»ÄÜÉèÖÃÎªUq = voltage_power_supply/2£¬·ñÔòua,ub,uc»á³¬³ö¹©µçµçÑ¹ÏŞ·ù
+   26   1        bldc_init->Uq = bldc_init->voltage_power_supply/5;
+   27   1      }
    28          
-   29          //float _electricalAngle(BLDC bldc_setangle) 
-   30          //{
-   31          //  return (bldc_setangle.shaft_angle * bldc_setangle.pole_pairs);
-   32          //}
-   33          
-   34          
-   35          // ¹éÒ»»¯½Ç¶Èµ½ [0,2PI]
-   36          float _normalizeAngle(float angle){
-   37   1         
-   38   1        float a = fmod(angle, 2*PI);//È¡ÓàÔËËã¿ÉÒÔÓÃÓÚ¹éÒ»»¯£¬ÁĞ³öÌØÊâÖµÀı×ÓËã±ãÖª
-   39   1        return a >= 0 ? a : (a + 2*PI);  //ÈıÄ¿ÔËËã·û¡£¸ñÊ½£ºcondition ? expr1 : expr2 
-   40   1        
-   41   1        //fmod º¯ÊıµÄÓàÊıµÄ·ûºÅÓë³ıÊıÏàÍ¬¡£Òò´Ë£¬µ± angle µÄÖµÎª¸ºÊıÊ±£¬ÓàÊıµÄ·ûºÅ½«Óë _2PI µÄ·ûºÅÏà·´¡£Ò²¾ÍÊÇË
+   29          
+   30          
+   31          
+   32          // ¹éÒ»»¯½Ç¶Èµ½ [0,2PI]
+   33          float _normalizeAngle(float angle){
+   34   1         
+   35   1        float a = fmod(angle, 2*PI);//È¡ÓàÔËËã¿ÉÒÔÓÃÓÚ¹éÒ»»¯£¬ÁĞ³öÌØÊâÖµÀı×ÓËã±ãÖª
+   36   1        return a >= 0 ? a : (a + 2*PI);  //ÈıÄ¿ÔËËã·û¡£¸ñÊ½£ºcondition ? expr1 : expr2 
+   37   1        
+   38   1        //fmod º¯ÊıµÄÓàÊıµÄ·ûºÅÓë³ıÊıÏàÍ¬¡£Òò´Ë£¬µ± angle µÄÖµÎª¸ºÊıÊ±£¬ÓàÊıµÄ·ûºÅ½«Óë _2PI µÄ·ûºÅÏà·´¡£Ò²¾ÍÊÇË
              -µ£¬Èç¹û angle µÄÖµĞ¡ÓÚ 0 ÇÒ _2PI µÄÖµÎªÕıÊı£¬Ôò fmod(angle, _2PI) µÄÓàÊı½«Îª¸ºÊı¡£
-   42   1        //ÀıÈç£¬µ± angle µÄÖµÎª -PI/2£¬_2PI µÄÖµÎª 2PI Ê±£¬fmod(angle, _2PI) ½«·µ»ØÒ»¸ö¸ºÊı¡£ÔÚÕâÖÖÇé¿öÏÂ£¬¿ÉÒÔ
+   39   1        //ÀıÈç£¬µ± angle µÄÖµÎª -PI/2£¬_2PI µÄÖµÎª 2PI Ê±£¬fmod(angle, _2PI) ½«·µ»ØÒ»¸ö¸ºÊı¡£ÔÚÕâÖÖÇé¿öÏÂ£¬¿ÉÒÔ
              -Í¨¹ı½«¸ºÊıµÄÓàÊı¼ÓÉÏ _2PI À´½«½Ç¶È¹éÒ»»¯µ½ [0, 2PI] µÄ·¶Î§ÄÚ£¬ÒÔÈ·±£½Ç¶ÈµÄÖµÊ¼ÖÕÎªÕıÊı¡£
-   43   1      }
+   40   1      }
+   41          
+   42          
+   43          
    44          
-   45          
-   46          
-   47          
-   48          // void setPhaseVoltage(BLDC *bldc_set,float Uq,float Ud) {
-   49          //   bldc_set->angle_elec = _normalizeAngle(bldc_set->angle_elec + bldc_set->zero_electric_angle);
-   50          //   // ÅÁ¿ËÄæ±ä»»
-   51          //   bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
-   52          //   bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
-   53          
-   54          //   // ¿ËÀ­¿ËÄæ±ä»»
-   55          //   bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
-C251 COMPILER V5.60.0,  BLDC                                                               28/06/23  11:06:06  PAGE 2   
-
-   56          //   bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
-   57          //   bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
-   58          // }
-   59          
-   60          
-   61          
-   62          
-   63          
-   64          void velocityOpenloop(BLDC *bldc_set)
-   65          {
-   66   1        bldc_set->target_velocity=3;
-   67   1      
-   68   1        // Í¨¹ı³ËÒÔÊ±¼ä¼ä¸ôºÍÄ¿±êËÙ¶ÈÀ´¼ÆËãĞèÒª×ª¶¯µÄ»úĞµ½Ç¶È£¬´æ´¢ÔÚ shaft_angle ±äÁ¿ÖĞ¡£ÔÚ´ËÖ®Ç°£¬»¹ĞèÒª¶ÔÖá½
+   45          void velocityOpenloop(BLDC *bldc_set)
+   46          {
+   47   1        bldc_set->target_velocity=10;
+   48   1        TR0 = 0;
+   49   1        Ts=(TH0<<8)|TL0;
+   50   1        TH0 = 0;
+   51   1        TL0 = 0;
+   52   1        TR0 = 1;
+   53   1        // Í¨¹ı³ËÒÔÊ±¼ä¼ä¸ôºÍÄ¿±êËÙ¶ÈÀ´¼ÆËãĞèÒª×ª¶¯µÄ»úĞµ½Ç¶È£¬´æ´¢ÔÚ shaft_angle ±äÁ¿ÖĞ¡£ÔÚ´ËÖ®Ç°£¬»¹ĞèÒª¶ÔÖá½
              -Ç¶È½øĞĞ¹éÒ»»¯£¬ÒÔÈ·±£ÆäÖµÔÚ 0 µ½ 2¦Ğ Ö®¼ä¡£ 
-   69   1        //ÒÔÄ¿±êËÙ¶ÈÎª 10 rad/s ÎªÀı£¬Èç¹ûÊ±¼ä¼ä¸ôÊÇ 1 Ãë£¬ÔòÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼Ó 10 * 1 = 10 »¡¶ÈµÄ½Ç¶È±ä»¯Á¿£¬
+C251 COMPILER V5.60.0,  BLDC                                                               29/06/23  12:31:39  PAGE 2   
+
+   54   1        //ÒÔÄ¿±êËÙ¶ÈÎª 10 rad/s ÎªÀı£¬Èç¹ûÊ±¼ä¼ä¸ôÊÇ 1 Ãë£¬ÔòÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼Ó 10 * 1 = 10 »¡¶ÈµÄ½Ç¶È±ä»¯Á¿£¬
              -²ÅÄÜÊ¹µç»ú×ª¶¯µ½Ä¿±êËÙ¶È¡£
-   70   1        //Èç¹ûÊ±¼ä¼ä¸ôÊÇ 0.1 Ãë£¬ÄÇÃ´ÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼ÓµÄ½Ç¶È±ä»¯Á¿¾ÍÊÇ 10 * 0.1 = 1 »¡¶È£¬²ÅÄÜÊµÏÖÏàÍ¬µÄÄ¿±ê
+   55   1        //Èç¹ûÊ±¼ä¼ä¸ôÊÇ 0.1 Ãë£¬ÄÇÃ´ÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼ÓµÄ½Ç¶È±ä»¯Á¿¾ÍÊÇ 10 * 0.1 = 1 »¡¶È£¬²ÅÄÜÊµÏÖÏàÍ¬µÄÄ¿±ê
              -ËÙ¶È¡£Òò´Ë£¬µç»úÖáµÄ×ª¶¯½Ç¶ÈÈ¡¾öÓÚÄ¿±êËÙ¶ÈºÍÊ±¼ä¼ä¸ôµÄ³Ë»ı¡£
-   71   1        bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*bldc_set->opl
-             -p_timestamp);
-   72   1        //¼ÆËãµç½Ç¶È
-   73   1        bldc_set->angle_elec=bldc_set->shaft_angle*bldc_set->pole_pairs;
-   74   1        //µç½Ç¶È¹éÒ»»¯
-   75   1        bldc_set->angle_elec = _normalizeAngle(bldc_set->angle_elec + bldc_set->zero_electric_angle);
-   76   1        
-   77   1        // ÅÁ¿ËÄæ±ä»»
-   78   1        bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
-   79   1        bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
-   80   1        // ¿ËÀ­¿ËÄæ±ä»»
-   81   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
-   82   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
-   83   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
-   84   1      
-   85   1        
-   86   1        
-   87   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   88   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   89   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   90   1      //  open_loop_timestamp = now_us;  //ÓÃÓÚ¼ÆËãÏÂÒ»¸öÊ±¼ä¼ä¸ô
-   91   1      }
-   92          
-   93          
+   56   1      //  bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*bldc_set->o
+             -plp_timestamp);
+   57   1        bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*Ts/35*12*1e-6f
+             -);
+   58   1        //¼ÆËãµç½Ç¶È
+   59   1        bldc_set->angle_elec=bldc_set->shaft_angle*bldc_set->pole_pairs;
+   60   1        //µç½Ç¶È¹éÒ»»¯
+   61   1        bldc_set->angle_elec = _normalizeAngle(bldc_set->angle_elec + bldc_set->zero_electric_angle);
+   62   1        // ÅÁ¿ËÄæ±ä»»
+   63   1        bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
+   64   1        bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
+   65   1        // ¿ËÀ­¿ËÄæ±ä»»
+   66   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+   67   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+   68   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+   69   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+   70   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+   71   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+   72   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+   73   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+   74   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+   75   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+   76   1        UpdatePwm(PWMA, &PWMA_Duty);
+   77   1      
+   78   1      }
+   79          
+   80          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       693     ------
+  code size            =       840     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
@@ -133,4 +122,4 @@ Module Information          Static   Overlayable
 End of Module Information.
 
 
-C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
+C251 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
