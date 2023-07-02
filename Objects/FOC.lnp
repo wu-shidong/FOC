@@ -7,6 +7,7 @@
 ".\Objects\bsp_pwm.obj",
 ".\Objects\bsp_i2c.obj",
 ".\Objects\bsp_delay.obj",
+".\Objects\bsp_can.obj",
 ".\Objects\BLDC.obj",
 ".\Objects\STC32G_Delay.obj",
 ".\Objects\STC32G_GPIO.obj",
@@ -19,6 +20,8 @@
 ".\Objects\STC32G_PWM_Isr.obj",
 ".\Objects\STC32G_I2C.obj",
 ".\Objects\STC32G_I2C_Isr.obj",
+".\Objects\STC32G_CAN.obj",
+".\Objects\STC32G_CAN_Isr.obj",
 ".\Objects\AS5600.obj" 
 TO ".\Objects\FOC" 
 PRINT(".\Listings\FOC.map") WARNINGLEVEL (0) CASE DISABLEWARNING (57,98) 

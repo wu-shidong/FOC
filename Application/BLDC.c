@@ -26,6 +26,7 @@
 #include "bsp_pwm.h"
 #include "bsp_i2c.h"
 #include "bsp_delay.h"
+#include "bsp_can.h"
 #include "AS5600.h"
 //初始变量及函数定义
 //宏定义实现的一个约束函数,用于限制一个值的范围。
@@ -60,10 +61,14 @@ return angle;
 }
 
 /**
+ * @name bldc_init
  * @brief 电机参数初始化设置
+ * @param bldc_init 电机结构体
+ * @param voltage_power_supply 电池电压
+ * @param pole_pairs 电机极对数
+ * @param ID 电机CAN帧头
 */
-
-void bldc_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
+void bldc_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs,unsigned long ID)
 {
   //设置输入电源电压
 	bldc_init->voltage_power_supply=voltage_power_supply;
@@ -71,8 +76,13 @@ void bldc_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
   //设置电机极对数
   bldc_init->pole_pairs=pole_pairs;
 
-  //位差角为0
+  //开环位差角为0
 	bldc_init->shaft_angle=0;
+
+  bldc_init->ID=ID;
+
+  bldc_init->control_mode=bldc_Zero_force;
+  bldc_init->prev_control_mode=bldc_Zero_force;
   //零电角度为0
   bldc_init->zero_electric_angle=4.22;
   // 使用早前设置的voltage_power_supply的1/3作为Uq值，这个值会直接影响输出力矩
@@ -85,9 +95,21 @@ void bldc_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
 	//闭环速度环pid初始参数设置
   PID_init(&bldc_init->closeloop_velocity_pid,PID_DELTA,clslp_velocity_pid,bldc_init->voltage_power_supply/3,voltage_power_supply/20);
   //角速度低通滤波初始化
-  initLowPassFilter(&bldc_init->velocity_lowPassFilter, 0.035);
+  initLowPassFilter(&bldc_init->velocity_lowPassFilter, 0.025);
 }
 
+
+
+void bldc_reset(BLDC *bldc_reset)
+{
+	bldc_reset->shaft_angle=0;
+    //闭环角度环pid初始参数设置
+	PID_init(&bldc_reset->closeloop_angle_pid,PID_POSITION,clslp_angle_pid,bldc_reset->voltage_power_supply/3,bldc_reset->voltage_power_supply/20);
+	//闭环速度环pid初始参数设置
+  PID_init(&bldc_reset->closeloop_velocity_pid,PID_DELTA,clslp_velocity_pid,bldc_reset->voltage_power_supply/3,bldc_reset->voltage_power_supply/20);
+  //角速度低通滤波初始化
+  initLowPassFilter(&bldc_reset->velocity_lowPassFilter, 0.035);
+}
 
 /**
  * @brief 设置相电压函数
@@ -121,31 +143,31 @@ void setPhaseVoltage(BLDC *bldc_set,float Uq,float Ud, float angle_el)
 }
 
 
-void bldc_clslp_init(BLDC *bldc_set)
-{
-	
-	float zero_electric_angle_CW;
-	float zero_electric_angle_CCW;
-	unsigned int i;
-	printf("BLDC_init_start\r\n");
-	while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
-	{
-		velocityOpenloop(bldc_set,0.5);
-	}
-  zero_electric_angle_CCW=bldc_set->angle_elec;
-	for(i=0;i<1000;i++)
-  {
-		velocityOpenloop(bldc_set,0.5);
-  }
-	while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
-	{
-		velocityOpenloop(bldc_set,-0.5);
-	}
-	zero_electric_angle_CW=bldc_set->angle_elec;
-//	printf("zero_electric_angle_CW=%f,%f\r\n",zero_electric_angle_CW,_normalizeAngle_PI(bldc_set->relative_angle));
-	bldc_set->zero_electric_angle=(zero_electric_angle_CW+zero_electric_angle_CCW)/2;
-	printf("BLDC zero_electric_angle=%f\r\n",bldc_set->zero_electric_angle);
-}
+//void bldc_clslp_init(BLDC *bldc_set)
+//{
+//	
+//	float zero_electric_angle_CW;
+//	float zero_electric_angle_CCW;
+//	unsigned int i;
+//	printf("BLDC_init_start\r\n");
+//	while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
+//	{
+//		velocityOpenloop(bldc_set,0.5);
+//	}
+//  zero_electric_angle_CCW=bldc_set->angle_elec;
+//	for(i=0;i<1000;i++)
+//  {
+//		velocityOpenloop(bldc_set,0.5);
+//  }
+//	while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
+//	{
+//		velocityOpenloop(bldc_set,-0.5);
+//	}
+//	zero_electric_angle_CW=bldc_set->angle_elec;
+////	printf("zero_electric_angle_CW=%f,%f\r\n",zero_electric_angle_CW,_normalizeAngle_PI(bldc_set->relative_angle));
+//	bldc_set->zero_electric_angle=(zero_electric_angle_CW+zero_electric_angle_CCW)/2;
+//	printf("BLDC zero_electric_angle=%f\r\n",bldc_set->zero_electric_angle);
+//}
 
 
 /**
@@ -154,9 +176,8 @@ void bldc_clslp_init(BLDC *bldc_set)
  * @param velocity 目标速度
 */
 
-void velocityOpenloop(BLDC *bldc_set,float velocity)
+void velocityOpenloop(BLDC *bldc_set)
 {
-  bldc_set->target_velocity=velocity;
   bldc_set->Uq=bldc_set->voltage_power_supply/5;
   //计算时间周期
 	TR0 = 0;
@@ -201,21 +222,23 @@ void velocityOpenloop(BLDC *bldc_set,float velocity)
   PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
 	UpdatePwm(PWMA, &PWMA_Duty);
 }
+
+
 /**
  * @brief 开环电压函数
  * @param bldc_set 电机对象结构体
  * @param voltage 给定电压输出
 */
-void voltageOpenloop (BLDC *bldc_set,int voltage)
+void voltageOpenloop (BLDC *bldc_set)
 {
   // 计算运算周期
   TR0 = 0;
-	bldc_set->Ts=(TH0<<8)|TL0;
+	bldc_set->int_s=(TH0<<8)|TL0;
 	TH0 = 0;
 	TL0 = 0;
 	TR0 = 1;
 	//电压给值限幅
-	bldc_set->target_voltage=_constrain(voltage,-30000,30000);
+	bldc_set->target_voltage=_constrain(bldc_set->target_voltage,-30000,30000);
   //获取绝对角度和相对角度
   bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
   bldc_set->relative_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
@@ -257,14 +280,13 @@ void voltageOpenloop (BLDC *bldc_set,int voltage)
  * @param bldc_set 电机对象结构体
  * @param velocity 目标角度
 */
-void angleCloseloop (BLDC *bldc_set,float angle)
+void angleCloseloop (BLDC *bldc_set)
 {
   TR0 = 0;
 	bldc_set->Ts=(TH0<<8)|TL0;
 	TH0 = 0;
 	TL0 = 0;
 	TR0 = 1;
-  bldc_set->target_angle=angle;
   //获取绝对角度
   bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
   //获取相对角度
@@ -308,21 +330,20 @@ void angleCloseloop (BLDC *bldc_set,float angle)
  * @param bldc_set 电机对象结构体
  * @param velocity 目标角速度
 */
-void velocityCloseloop (BLDC *bldc_set,float velocity)
+void velocityCloseloop (BLDC *bldc_set)
 {
-
   TR0 = 0;//关闭定时器0
   //读取定时器值
+  bldc_set->int_s=(TH0<<8)|TL0;
 	bldc_set->Ts=(float)((TH0<<8)|TL0)/35*12*1e-6f;
 	TH0 = 0;// 定时器重装值高八位为0
 	TL0 = 0;//定时器重装值低八位为0
 	TR0 = 1;//开启定时器
-	bldc_set->target_velocity=velocity;
   //计算角速度
   bldc_set->current_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
-  bldc_set->diff_angle=bldc_set->current_angle-bldc_set->prev_angle;
-  if(fabs(bldc_set->diff_angle) > (0.8f*2*PI) ) bldc_set->current_full_rotations += ( bldc_set->diff_angle > 0 ) ? -1 : 1;
-  bldc_set->angular_velocity= ((float)(bldc_set->current_full_rotations - bldc_set->prev_full_rotations) * 2 * PI + (bldc_set->diff_angle) ) / bldc_set->Ts;
+  bldc_set->encode=_AS5600_get_encode();//获取编码值
+  bldc_set->diff_angle=_normalizeAngle_PI(bldc_set->current_angle-bldc_set->prev_angle);
+  bldc_set->angular_velocity= (bldc_set->diff_angle)/bldc_set->Ts;
   bldc_set->prev_angle=bldc_set->current_angle;
   bldc_set->prev_full_rotations=bldc_set->current_full_rotations;
   bldc_set->filtered_Velocity=lowPassFilter(&bldc_set->velocity_lowPassFilter,bldc_set->angular_velocity,bldc_set->Ts);
@@ -331,9 +352,9 @@ void velocityCloseloop (BLDC *bldc_set,float velocity)
   bldc_set->relative_angle=bldc_set->current_angle;
   //获取相对磁角度
 	bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
-   bldc_set->target_voltage=PID_calc(&bldc_set->closeloop_velocity_pid,bldc_set->filtered_Velocity,bldc_set->target_velocity);
+  bldc_set->target_voltage=PID_calc(&bldc_set->closeloop_velocity_pid,bldc_set->filtered_Velocity,bldc_set->target_velocity);
   //获取偏差值
-   bldc_set->e=bldc_set->target_velocity-bldc_set->filtered_Velocity;
+  bldc_set->e=bldc_set->target_velocity-bldc_set->filtered_Velocity;
   //根据给定电压值的正负决定相位差角的正负
 	if(bldc_set->target_voltage>0)
 	{
@@ -362,10 +383,41 @@ void velocityCloseloop (BLDC *bldc_set,float velocity)
   PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
   //PWM状态更新
 	UpdatePwm(PWMA, &PWMA_Duty);
+	can1_send_data(bldc_set->ID,bldc_set->encode,(int16)(bldc_set->filtered_Velocity*180/PI),0,bldc_set->int_s);
 }
 
 
-
+void BLDC_control(BLDC *bldc_set)
+{
+  switch (bldc_set->control_mode)
+  {
+  case bldc_Zero_force:
+    PWMA_Duty.PWM1_Duty=0;
+    PWMA_Duty.PWM2_Duty=0;
+    PWMA_Duty.PWM3_Duty=0;
+    UpdatePwm(PWMA, &PWMA_Duty);
+    /* code */
+    break;
+  case velocity_Openloop:
+    velocityOpenloop(bldc_set);
+    break;
+  case velocity_Closeloop:
+    velocityCloseloop(bldc_set);
+    break;    
+  case voltage_Openloop:
+    voltageOpenloop(bldc_set);
+    break;
+  case angle_Closeloop:
+    angleCloseloop(bldc_set);
+    break;
+  default:
+    PWMA_Duty.PWM1_Duty=0;
+    PWMA_Duty.PWM2_Duty=0;
+    PWMA_Duty.PWM3_Duty=0;
+    UpdatePwm(PWMA, &PWMA_Duty);  
+    break;
+  }
+}
 
 //void angleCascadeloop (BLDC *bldc_set,float angle)
 //{
@@ -411,3 +463,6 @@ void velocityCloseloop (BLDC *bldc_set,float velocity)
 //  //PWM状态更新
 //	UpdatePwm(PWMA, &PWMA_Duty);
 //}
+
+
+

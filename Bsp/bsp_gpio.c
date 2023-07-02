@@ -1,5 +1,5 @@
 #include "bsp_gpio.h"
-
+#include	"STC32G_Switch.h"
 
 void GPIO_config(void)
 {
@@ -26,6 +26,6 @@ void GPIO_config(void)
 	GPIO_Inilize(GPIO_P0,&GPIO_InitStructure);	//≥ı ºªØ	
 	
 	
-	
-	
+	CAN1_SW(CAN1_P50_P51);				//CAN1_P00_P01,CAN1_P50_P51,CAN1_P42_P45,CAN1_P70_P71
+//	CAN2_SW(CAN2_P52_P53);				//CAN2_P02_P03,CAN2_P52_P53,CAN2_P46_P47,CAN2_P72_P73
 }

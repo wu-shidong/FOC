@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 1   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE STC32G_UART
@@ -66,7 +66,7 @@ stmt  level    source
                #endif
    57   1      
    58   1      #ifdef UART1
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 2   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 2   
 
    59   1        if(UARTx == UART1)
    60   1        {
@@ -134,7 +134,7 @@ stmt  level    source
   122   2          for(i=0; i<COM_TX2_Lenth; i++)  TX2_Buffer[i] = 0;
   123   2          for(i=0; i<COM_RX2_Lenth; i++)  RX2_Buffer[i] = 0;
   124   2      
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 3   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 3   
 
   125   2          S2CON = (S2CON & 0x3f) | COMx->UART_Mode; //模式设置
   126   2          if((COMx->UART_Mode == UART_9bit_BRTx) ||(COMx->UART_Mode == UART_8bit_BRTx)) //可变波特率
@@ -202,7 +202,7 @@ stmt  level    source
   188   1      #endif
   189   1      #ifdef UART4
   190   1        if(UARTx == UART4)
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 4   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 4   
 
   191   1        {
   192   2          COM4.TX_send    = 0;
@@ -270,7 +270,7 @@ stmt  level    source
                    //以下是阻塞方式发送方法
                  SBUF = dat;
                  COM1.B_TX_busy = 1;   //标志忙
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 5   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 5   
 
                  while(COM1.B_TX_busy);
                    #endif
@@ -338,7 +338,7 @@ stmt  level    source
   317          {
   318   1          for (; *puts != 0;  puts++)  TX3_write2buff(*puts);   //遇到停止符0结束
   319   1      }
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 6   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 6   
 
   320          
   321          #endif
@@ -406,7 +406,7 @@ stmt  level    source
                }
                
                #elif(PRINTF_SELECT == 3)
-C251 COMPILER V5.60.0,  STC32G_UART                                                        01/07/23  18:31:46  PAGE 7   
+C251 COMPILER V5.60.0,  STC32G_UART                                                        03/07/23  06:55:19  PAGE 7   
 
                
                char putchar(char c)

@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  STC32G_I2C                                                         01/07/23  18:31:47  PAGE 1   
+C251 COMPILER V5.60.0,  STC32G_I2C                                                         03/07/23  06:55:20  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE STC32G_I2C
@@ -66,7 +66,7 @@ stmt  level    source
    56          //========================================================================
    57          u8 Get_MSBusy_Status(void)
    58          {
-C251 COMPILER V5.60.0,  STC32G_I2C                                                         01/07/23  18:31:47  PAGE 2   
+C251 COMPILER V5.60.0,  STC32G_I2C                                                         03/07/23  06:55:20  PAGE 2   
 
    59   1        return (I2CMSST & 0x80);
    60   1      }
@@ -134,7 +134,7 @@ stmt  level    source
   122          char RecvData()
   123          {
   124   1        I2CMSCR = 0x04;                         //∑¢ÀÕRECV√¸¡Ó
-C251 COMPILER V5.60.0,  STC32G_I2C                                                         01/07/23  18:31:47  PAGE 3   
+C251 COMPILER V5.60.0,  STC32G_I2C                                                         03/07/23  06:55:20  PAGE 3   
 
   125   1        Wait();
   126   1        return I2CRXD;
@@ -202,7 +202,7 @@ stmt  level    source
   188          // ∑µªÿ: none.
   189          // ∞Ê±æ: V1.0, 2020-09-15
   190          //========================================================================
-C251 COMPILER V5.60.0,  STC32G_I2C                                                         01/07/23  18:31:47  PAGE 4   
+C251 COMPILER V5.60.0,  STC32G_I2C                                                         03/07/23  06:55:20  PAGE 4   
 
   191          void I2C_WriteNbyte(u8 dev_addr, u8 mem_addr, u8 *p, u8 number)  /*  DeviceAddress,WordAddress,First Data
              - Address,Byte lenth   */

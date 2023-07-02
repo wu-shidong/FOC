@@ -1,4 +1,4 @@
-C251 COMPILER V5.60.0,  bsp_gpio                                                           01/07/23  18:31:45  PAGE 1   
+C251 COMPILER V5.60.0,  bsp_gpio                                                           03/07/23  06:55:17  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_gpio
@@ -9,7 +9,7 @@ COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Bsp\bsp_gpio.c LARGE INTR2 BRO
 stmt  level    source
 
     1          #include "bsp_gpio.h"
-    2          
+    2          #include  "STC32G_Switch.h"
     3          
     4          void GPIO_config(void)
     5          {
@@ -42,14 +42,14 @@ stmt  level    source
    26   1        GPIO_Inilize(GPIO_P0,&GPIO_InitStructure);  //≥ı ºªØ  
    27   1        
    28   1        
-   29   1        
-   30   1        
+   29   1        CAN1_SW(CAN1_P50_P51);        //CAN1_P00_P01,CAN1_P50_P51,CAN1_P42_P45,CAN1_P70_P71
+   30   1      //  CAN2_SW(CAN2_P52_P53);        //CAN2_P02_P03,CAN2_P52_P53,CAN2_P46_P47,CAN2_P72_P73
    31   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =        94     ------
+  code size            =       103     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------

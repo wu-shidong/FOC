@@ -379,6 +379,11 @@
               <FileType>1</FileType>
               <FilePath>.\Bsp\bsp_delay.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Bsp\bsp_can.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -448,6 +453,16 @@
               <FileName>STC32G_I2C_Isr.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Lib\STC32G_I2C_Isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_CAN.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_CAN.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_CAN_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_CAN_Isr.c</FilePath>
             </File>
           </Files>
         </Group>
