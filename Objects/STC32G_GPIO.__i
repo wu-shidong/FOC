@@ -1,1 +1,0 @@
-"Lib\STC32G_GPIO.c" LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\Lib) DEBUG PRINT(.\Listings\STC32G_GPIO.lst) TABS (2) OBJECT(.\Objects\STC32G_GPIO.obj)

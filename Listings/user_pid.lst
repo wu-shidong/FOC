@@ -1,87 +1,166 @@
-C251 COMPILER V5.60.0,  user_pid                                                           28/06/23  22:50:38  PAGE 1   
+C251 COMPILER V5.60.0,  user_pid                                                           01/07/23  18:31:45  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE user_pid
 OBJECT MODULE PLACED IN .\Objects\user_pid.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Componenets\user_pid.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.
-                    -\Componenets;.\Lib) DEBUG PRINT(.\Listings\user_pid.lst) TABS(2) OBJECT(.\Objects\user_pid.obj) 
+                    -\Componenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\user_pid.lst) TABS(2) OBJECT(.\Objects\user_pid.obj) 
 
 stmt  level    source
 
-    1          /****************************************************************************
-    2           *  Copyright (C) 2018 RoboMaster.
-    3           *
-    4           *  This program is free software: you can redistribute it and/or modify
-    5           *  it under the terms of the GNU General Public License as published by
-    6           *  the Free Software Foundation, either version 3 of the License, or
-    7           *  (at your option) any later version.
-    8           *
-    9           *  This program is distributed in the hope that it will be useful,
-   10           *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
-   11           *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   12           *  GNU General Public License for more details.
-   13           *
-   14           *  You should have received a copy of the GNU General Public License
-   15           *  along with this program. If not, see <http://www.gnu.org/licenses/>.
-   16           ***************************************************************************/
-   17           
+    1          /**
+    2            ****************************************************************************
+    3            * @file       pid.c/h
+    4            * @brief      pid实现函数，包括初始化，PID计算函数，
+    5            * @note       
+    6            * @history
+    7            *  Version    Date            Author          Modification
+    8            *  V1.0.0     Dec-26-2022     吴世栋              完成
+    9            *
+   10            @verbatim
+   11            ==============================================================================
+   12          
+   13            ==============================================================================
+   14            @endverbatim
+   15            ****************************************************************************
+   16            */
+   17          
    18          #include "user_pid.h"
    19          
-   20          /**
-   21            * @brief  init pid parameter
-   22            * @param  pid struct
-   23              @param  parameter
-   24            * @retval None
-   25            */
-   26          void pid_init(pid_struct_t *pid,
-   27                        float kp,
-   28                        float ki,
-   29                        float kd,
-   30                        float i_max,
-   31                        float out_max)
-   32          {
-   33   1        pid->kp      = kp;
-   34   1        pid->ki      = ki;
-   35   1        pid->kd      = kd;
-   36   1        pid->i_max   = i_max;
-   37   1        pid->out_max = out_max;
-   38   1      }
-   39          
-   40          /**
-   41            * @brief  pid calculation
-   42            * @param  pid struct
-   43              @param  reference value
-   44              @param  feedback value
-   45            * @retval calculation result
-   46            */
-   47          float pid_calc(pid_struct_t *pid, float ref, float fdb)
-   48          {
-   49   1        pid->ref = ref;
-   50   1        pid->fdb = fdb;
-   51   1        pid->err[1] = pid->err[0];
-   52   1        pid->err[0] = pid->ref - pid->fdb;
-   53   1        
-   54   1        pid->p_out  = pid->kp * pid->err[0];
-   55   1        pid->i_out += pid->ki * pid->err[0];
-   56   1        pid->d_out  = pid->kd * (pid->err[0] - pid->err[1]);
-   57   1        LIMIT_MIN_MAX(pid->i_out, -pid->i_max, pid->i_max);
-   58   1        
-C251 COMPILER V5.60.0,  user_pid                                                           28/06/23  22:50:38  PAGE 2   
+   20          
+   21          #define LimitMax(input, max)   \
+   22              {                          \
+   23                  if (input > max)       \
+   24                  {                      \
+   25                      input = max;       \
+   26                  }                      \
+   27                  else if (input < -max) \
+   28                  {                      \
+   29                      input = -max;      \
+   30                  }                      \
+   31              }
+   32          
+   33          /**
+   34            * @brief          pid struct data init
+   35            * @param[out]     pid: PID struct data point
+   36            * @param[in]      mode: PID_POSITION: normal pid
+   37            *                 PID_DELTA: delta pid
+   38            * @param[in]      PID: 0: kp, 1: ki, 2:kd
+   39            * @param[in]      max_out: pid max out
+   40            * @param[in]      max_iout: pid max iout
+   41            * @retval         none
+   42            */
+   43          /**
+   44            * @brief          pid struct data init
+   45            * @param[out]     pid: PID结构数据指针
+   46            * @param[in]      mode: PID_POSITION:普通PID
+   47            *                 PID_DELTA: 差分PID
+   48            * @param[in]      PID: 0: kp, 1: ki, 2:kd
+   49            * @param[in]      max_out: pid最大输出
+   50            * @param[in]      max_iout: pid最大积分输出
+   51            * @retval         none
+   52            */
+   53          void PID_init(pid_type_def *pid, u8 mode, fp32 PID[3], fp32 max_out, fp32 max_iout)
+   54          {
+   55   1      
+   56   1          pid->mode = mode;
+   57   1          pid->Kp = PID[0];
+   58   1          pid->Ki = PID[1];
+C251 COMPILER V5.60.0,  user_pid                                                           01/07/23  18:31:45  PAGE 2   
 
-   59   1        pid->output = pid->p_out + pid->i_out + pid->d_out;
-   60   1        LIMIT_MIN_MAX(pid->output, -pid->out_max, pid->out_max);
-   61   1        return pid->output;
-   62   1      }
+   59   1          pid->Kd = PID[2];
+   60   1          pid->max_out = max_out;
+   61   1          pid->max_iout = max_iout;
+   62   1          pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
+   63   1          pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
+   64   1      }
+   65          
+   66          /**
+   67            * @brief          pid calculate 
+   68            * @param[out]     pid: PID struct data point
+   69            * @param[in]      ref: feedback data 
+   70            * @param[in]      set: set point
+   71            * @retval         pid out
+   72            */
+   73          /**
+   74            * @brief          pid计算
+   75            * @param[out]     pid: PID结构数据指针
+   76            * @param[in]      ref: 反馈数据
+   77            * @param[in]      set: 设定值
+   78            * @retval         pid输出
+   79            */
+   80          fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
+   81          {
+   82   1          if (pid == NULL)
+   83   1          {
+   84   2              return 0.0f;
+   85   2          }
+   86   1      
+   87   1          pid->error[2] = pid->error[1];
+   88   1          pid->error[1] = pid->error[0];
+   89   1          pid->set = set;
+   90   1          pid->fdb = ref;
+   91   1          pid->error[0] = set - ref;
+   92   1          if (pid->mode == PID_POSITION)
+   93   1          {
+   94   2              pid->Pout = pid->Kp * pid->error[0];
+   95   2              pid->Iout += pid->Ki * pid->error[0];
+   96   2              pid->Dbuf[2] = pid->Dbuf[1];
+   97   2              pid->Dbuf[1] = pid->Dbuf[0];
+   98   2              pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
+   99   2              pid->Dout = pid->Kd * pid->Dbuf[0];
+  100   2              LimitMax(pid->Iout, pid->max_iout);
+  101   2              pid->out = pid->Pout + pid->Iout + pid->Dout;
+  102   2              LimitMax(pid->out, pid->max_out);
+  103   2          }
+  104   1          else if (pid->mode == PID_DELTA)
+  105   1          {
+  106   2              pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
+  107   2              pid->Iout = pid->Ki * pid->error[0];
+  108   2              pid->Dbuf[2] = pid->Dbuf[1];
+  109   2              pid->Dbuf[1] = pid->Dbuf[0];
+  110   2              pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+  111   2              pid->Dout = pid->Kd * pid->Dbuf[0];
+  112   2              pid->out += pid->Pout + pid->Iout + pid->Dout;
+  113   2              LimitMax(pid->out, pid->max_out);
+  114   2          }
+  115   1          return pid->out;
+  116   1      }
+  117          
+  118          /**
+  119            * @brief          pid out clear
+  120            * @param[out]     pid: PID struct data point
+  121            * @retval         none
+  122            */
+  123          /**
+  124            * @brief          pid 输出清除
+C251 COMPILER V5.60.0,  user_pid                                                           01/07/23  18:31:45  PAGE 3   
+
+  125            * @param[out]     pid: PID结构数据指针
+  126            * @retval         none
+  127            */
+  128          void PID_clear(pid_type_def *pid)
+  129          {
+  130   1          if (pid == NULL)
+  131   1          {
+  132   2              return;
+  133   2          }
+  134   1      
+  135   1          pid->error[0] = pid->error[1] = pid->error[2] = 0.0f;
+  136   1          pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
+  137   1          pid->out = pid->Pout = pid->Iout = pid->Dout = 0.0f;
+  138   1          pid->fdb = pid->set = 0.0f;
+  139   1      }
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       446     ------
+  code size            =       972     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =    ------         20
+  xdata size           =    ------         12
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------

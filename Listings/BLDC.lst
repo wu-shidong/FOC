@@ -1,114 +1,471 @@
-C251 COMPILER V5.60.0,  BLDC                                                               29/06/23  12:31:39  PAGE 1   
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE BLDC
 OBJECT MODULE PLACED IN .\Objects\BLDC.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Application\BLDC.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Com
-                    -ponenets;.\Lib) DEBUG PRINT(.\Listings\BLDC.lst) TABS(2) OBJECT(.\Objects\BLDC.obj) 
+                    -ponenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\BLDC.lst) TABS(2) OBJECT(.\Objects\BLDC.obj) 
 
 stmt  level    source
 
-    1          #include "BLDC.h"
-    2          #include <MATH.H>
-    3          #include <stdio.h>
-    4          #include "user_pid.h"
-    5          #include "bsp_pwm.h"
-*** WARNING C317 IN LINE 40 OF type_def.h: attempt to redefine macro 'NULL'
-    6          //³õÊ¼±äÁ¿¼°º¯Êı¶¨Òå
-    7          //ºê¶¨ÒåÊµÏÖµÄÒ»¸öÔ¼Êøº¯Êı,ÓÃÓÚÏŞÖÆÒ»¸öÖµµÄ·¶Î§¡£
-    8          //¾ßÌåÀ´Ëµ£¬¸Ãºê¶¨ÒåµÄÃû³ÆÎª _constrain£¬½ÓÊÜÈı¸ö²ÎÊı amt¡¢low ºÍ high£¬·Ö±ğ±íÊ¾ÒªÏŞÖÆµÄÖµ¡¢×îĞ¡ÖµºÍ×î´óÖ
+    1          /**
+    2            ********************************************************
+    3            * @file       BLDC.c/h
+    4            * @brief      °üÀ¨¶ÔÖ±Á÷¼õËÙµç»ú½øĞĞ³õÊ¼»¯²ÎÊıÉèÖÃËÙ¶È¿ª»·¡¢
+    5            *             ½Ç¶È±Õ»·¡¢ËÙ¶È±Õ»·¡¢µçÁ÷Á¦¾Ø»·¿ØÖÆµÈº¯Êı
+    6            * @note       
+    7            * @history
+    8            *  Version    Date            Author          Modification
+    9            * V1.0.0     2023-6-26        ÎâÊÀ¶°          Íê³ÉÏîÄ¿³õÊ¼»¯
+   10            * V1.0.1     2023-6-27        ÎâÊÀ¶°          Íê³ÉPWM³õÊ¼ÖµÉèÖÃ
+   11            * V1.0.2     2023-6-28        ÎâÊÀ¶°          Íê³ÉÔËËãÖÜÆÚ¼ÆËã
+   12            * V1.0.3     2023-6-29        ÎâÊÀ¶°          Íê³É¿ª»·ËÙ¶È»·
+   13            * V1.0.4     2023-6-30        ÎâÊÀ¶°          Íê³É±Õ»·½Ç¶È»·
+   14            * V1.0.5     2023-7-01        ÎâÊÀ¶°          Íê³É±Õ»·ËÙ¶È»·
+   15            @verbatim
+   16            ========================================================
+   17            =========================================================
+   18            @endverbatim
+   19            ********************************************************
+   20            */
+   21          
+   22          
+   23          #include "BLDC.h"
+   24          #include <MATH.H>
+   25          #include <stdio.h>
+   26          #include "bsp_pwm.h"
+   27          #include "bsp_i2c.h"
+   28          #include "bsp_delay.h"
+   29          #include "AS5600.h"
+   30          //³õÊ¼±äÁ¿¼°º¯Êı¶¨Òå
+   31          //ºê¶¨ÒåÊµÏÖµÄÒ»¸öÔ¼Êøº¯Êı,ÓÃÓÚÏŞÖÆÒ»¸öÖµµÄ·¶Î§¡£
+   32          //¾ßÌåÀ´Ëµ£¬¸Ãºê¶¨ÒåµÄÃû³ÆÎª _constrain£¬½ÓÊÜÈı¸ö²ÎÊı amt¡¢low ºÍ high£¬·Ö±ğ±íÊ¾ÒªÏŞÖÆµÄÖµ¡¢×îĞ¡ÖµºÍ×î´óÖ
              -µ¡£¸Ãºê¶¨ÒåµÄÊµÏÖÊ¹ÓÃÁËÈıÔªÔËËã·û£¬¸ù¾İ amt ÊÇ·ñĞ¡ÓÚ low »ò´óÓÚ high£¬·µ»ØÆäÖĞµÄ×î´ó»ò×îĞ¡Öµ£¬»òÕß·µ»ØÔ­Öµ¡£
-    9          #define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-   10          #define PI 3.14159f
-   11          u16 Ts;
-   12          BLDC bldc_oplp;//¿ª»·¿ØÖÆ
-   13          
-   14          void bldc_openloop_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
-   15          {
-   16   1        //ÊäÈëµçÔ´µçÑ¹
-   17   1        bldc_init->voltage_power_supply=voltage_power_supply;
-   18   1      
-   19   1        //µç»ú¼«¶ÔÊı
-   20   1        bldc_init->pole_pairs=pole_pairs;
-   21   1      
-   22   1        //Î»²î½ÇÎª0
-   23   1        bldc_init->shaft_angle=0;
-   24   1        // Ê¹ÓÃÔçÇ°ÉèÖÃµÄvoltage_power_supplyµÄ1/3×÷ÎªUqÖµ£¬Õâ¸öÖµ»áÖ±½ÓÓ°ÏìÊä³öÁ¦¾Ø
-   25   1        // ×î´óÖ»ÄÜÉèÖÃÎªUq = voltage_power_supply/2£¬·ñÔòua,ub,uc»á³¬³ö¹©µçµçÑ¹ÏŞ·ù
-   26   1        bldc_init->Uq = bldc_init->voltage_power_supply/5;
-   27   1      }
-   28          
-   29          
-   30          
-   31          
-   32          // ¹éÒ»»¯½Ç¶Èµ½ [0,2PI]
-   33          float _normalizeAngle(float angle){
-   34   1         
-   35   1        float a = fmod(angle, 2*PI);//È¡ÓàÔËËã¿ÉÒÔÓÃÓÚ¹éÒ»»¯£¬ÁĞ³öÌØÊâÖµÀı×ÓËã±ãÖª
-   36   1        return a >= 0 ? a : (a + 2*PI);  //ÈıÄ¿ÔËËã·û¡£¸ñÊ½£ºcondition ? expr1 : expr2 
-   37   1        
-   38   1        //fmod º¯ÊıµÄÓàÊıµÄ·ûºÅÓë³ıÊıÏàÍ¬¡£Òò´Ë£¬µ± angle µÄÖµÎª¸ºÊıÊ±£¬ÓàÊıµÄ·ûºÅ½«Óë _2PI µÄ·ûºÅÏà·´¡£Ò²¾ÍÊÇË
+   33          #define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+   34          #define PI 3.14159f
+   35          #define PI_2 1.57f
+   36          #define PI_4 0.7854f
+   37          BLDC bldc_oplp;//¿ª»·¿ØÖÆ
+   38          BLDC bldc_clslp;//±Õ»·¿ØÖÆ
+   39          fp32 clslp_angle_pid[3]={CLSLP_ANGLE_KP,CLSLP_ANGLE_KI,CLSLP_ANGLE_KD};
+   40          fp32 clslp_velocity_pid[3]={CLSLP_VELOCITY_KP,CLSLP_VELOCITY_KI,CLSLP_VELOCITY_KD};
+   41          // ¹éÒ»»¯½Ç¶Èµ½ [0,2PI]
+   42          float _normalizeAngle(float angle){
+   43   1         
+   44   1        float a = fmod(angle, 2*PI);//È¡ÓàÔËËã¿ÉÒÔÓÃÓÚ¹éÒ»»¯£¬ÁĞ³öÌØÊâÖµÀı×ÓËã±ãÖª
+   45   1        return a >= 0 ? a : (a + 2*PI);  //ÈıÄ¿ÔËËã·û¡£¸ñÊ½£ºcondition ? expr1 : expr2 
+   46   1        //fmod º¯ÊıµÄÓàÊıµÄ·ûºÅÓë³ıÊıÏàÍ¬¡£Òò´Ë£¬µ± angle µÄÖµÎª¸ºÊıÊ±£¬ÓàÊıµÄ·ûºÅ½«Óë _2PI µÄ·ûºÅÏà·´¡£Ò²¾ÍÊÇË
              -µ£¬Èç¹û angle µÄÖµĞ¡ÓÚ 0 ÇÒ _2PI µÄÖµÎªÕıÊı£¬Ôò fmod(angle, _2PI) µÄÓàÊı½«Îª¸ºÊı¡£
-   39   1        //ÀıÈç£¬µ± angle µÄÖµÎª -PI/2£¬_2PI µÄÖµÎª 2PI Ê±£¬fmod(angle, _2PI) ½«·µ»ØÒ»¸ö¸ºÊı¡£ÔÚÕâÖÖÇé¿öÏÂ£¬¿ÉÒÔ
+   47   1        //ÀıÈç£¬µ± angle µÄÖµÎª -PI/2£¬_2PI µÄÖµÎª 2PI Ê±£¬fmod(angle, _2PI) ½«·µ»ØÒ»¸ö¸ºÊı¡£ÔÚÕâÖÖÇé¿öÏÂ£¬¿ÉÒÔ
              -Í¨¹ı½«¸ºÊıµÄÓàÊı¼ÓÉÏ _2PI À´½«½Ç¶È¹éÒ»»¯µ½ [0, 2PI] µÄ·¶Î§ÄÚ£¬ÒÔÈ·±£½Ç¶ÈµÄÖµÊ¼ÖÕÎªÕıÊı¡£
-   40   1      }
-   41          
-   42          
-   43          
-   44          
-   45          void velocityOpenloop(BLDC *bldc_set)
-   46          {
-   47   1        bldc_set->target_velocity=10;
-   48   1        TR0 = 0;
-   49   1        Ts=(TH0<<8)|TL0;
-   50   1        TH0 = 0;
-   51   1        TL0 = 0;
-   52   1        TR0 = 1;
-   53   1        // Í¨¹ı³ËÒÔÊ±¼ä¼ä¸ôºÍÄ¿±êËÙ¶ÈÀ´¼ÆËãĞèÒª×ª¶¯µÄ»úĞµ½Ç¶È£¬´æ´¢ÔÚ shaft_angle ±äÁ¿ÖĞ¡£ÔÚ´ËÖ®Ç°£¬»¹ĞèÒª¶ÔÖá½
-             -Ç¶È½øĞĞ¹éÒ»»¯£¬ÒÔÈ·±£ÆäÖµÔÚ 0 µ½ 2¦Ğ Ö®¼ä¡£ 
-C251 COMPILER V5.60.0,  BLDC                                                               29/06/23  12:31:39  PAGE 2   
+   48   1      }
+   49          // ¹éÒ»»¯½Ç¶Èµ½ [-PI,PI]
+   50          float _normalizeAngle_PI(float angle)
+   51          {
+   52   1        if(angle>PI)
+   53   1        {
+   54   2          angle=angle-2*PI;
+   55   2        }else if(angle<-PI)
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 2   
 
-   54   1        //ÒÔÄ¿±êËÙ¶ÈÎª 10 rad/s ÎªÀı£¬Èç¹ûÊ±¼ä¼ä¸ôÊÇ 1 Ãë£¬ÔòÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼Ó 10 * 1 = 10 »¡¶ÈµÄ½Ç¶È±ä»¯Á¿£¬
+   56   1        {
+   57   2          angle=angle+2*PI;
+   58   2        }
+   59   1      return angle;
+   60   1      }
+   61          
+   62          /**
+   63           * @brief µç»ú²ÎÊı³õÊ¼»¯ÉèÖÃ
+   64          */
+   65          
+   66          void bldc_init(BLDC *bldc_init,float voltage_power_supply,float pole_pairs)
+   67          {
+   68   1        //ÉèÖÃÊäÈëµçÔ´µçÑ¹
+   69   1        bldc_init->voltage_power_supply=voltage_power_supply;
+   70   1      
+   71   1        //ÉèÖÃµç»ú¼«¶ÔÊı
+   72   1        bldc_init->pole_pairs=pole_pairs;
+   73   1      
+   74   1        //Î»²î½ÇÎª0
+   75   1        bldc_init->shaft_angle=0;
+   76   1        //Áãµç½Ç¶ÈÎª0
+   77   1        bldc_init->zero_electric_angle=4.22;
+   78   1        // Ê¹ÓÃÔçÇ°ÉèÖÃµÄvoltage_power_supplyµÄ1/3×÷ÎªUqÖµ£¬Õâ¸öÖµ»áÖ±½ÓÓ°ÏìÊä³öÁ¦¾Ø
+   79   1        // ×î´óÖ»ÄÜÉèÖÃÎªUq = voltage_power_supply/2£¬·ñÔòua,ub,uc»á³¬³ö¹©µçµçÑ¹ÏŞ·ù
+   80   1        bldc_init->Uq = bldc_init->voltage_power_supply/3;
+   81   1        //±àÂëÆ÷·½Ïò
+   82   1        bldc_init->dir=-1;
+   83   1        //±Õ»·½Ç¶È»·pid³õÊ¼²ÎÊıÉèÖÃ
+   84   1        PID_init(&bldc_init->closeloop_angle_pid,PID_POSITION,clslp_angle_pid,bldc_init->voltage_power_supply/3,
+             -voltage_power_supply/20);
+   85   1        //±Õ»·ËÙ¶È»·pid³õÊ¼²ÎÊıÉèÖÃ
+   86   1        PID_init(&bldc_init->closeloop_velocity_pid,PID_DELTA,clslp_velocity_pid,bldc_init->voltage_power_suppl
+             -y/3,voltage_power_supply/20);
+   87   1        //½ÇËÙ¶ÈµÍÍ¨ÂË²¨³õÊ¼»¯
+   88   1        initLowPassFilter(&bldc_init->velocity_lowPassFilter, 0.035);
+   89   1      }
+   90          
+   91          
+   92          /**
+   93           * @brief ÉèÖÃÏàµçÑ¹º¯Êı
+   94           * @param bldc_set ÎŞË¢µç»ú½á¹¹Ìå
+   95           * @param Uq µçÑ¹·ùÖµ
+   96           * @param Ud Ò»°ãÊÇ0
+   97           * @param angle_el ¸ø¶¨µç½Ç¶È
+   98           * 
+   99          */
+  100          void setPhaseVoltage(BLDC *bldc_set,float Uq,float Ud, float angle_el)
+  101           {
+  102   1        //µç½Ç¶È¹éÒ»»¯
+  103   1        bldc_set->angle_elec = _normalizeAngle(angle_el);
+  104   1        bldc_set->Uq=Uq;
+  105   1        bldc_set->Ud=Ud;
+  106   1        // ÅÁ¿ËÄæ±ä»»
+  107   1        bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  108   1        bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
+  109   1        // ¿ËÀ­¿ËÄæ±ä»»
+  110   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  111   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  112   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  113   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  114   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  115   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  116   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  117   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  118   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  119   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 3   
+
+  120   1        UpdatePwm(PWMA, &PWMA_Duty);
+  121   1      }
+  122          
+  123          
+  124          void bldc_clslp_init(BLDC *bldc_set)
+  125          {
+  126   1        
+  127   1        float zero_electric_angle_CW;
+  128   1        float zero_electric_angle_CCW;
+  129   1        unsigned int i;
+  130   1        printf("BLDC_init_start\r\n");
+  131   1        while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
+  132   1        {
+  133   2          velocityOpenloop(bldc_set,0.5);
+  134   2        }
+  135   1        zero_electric_angle_CCW=bldc_set->angle_elec;
+  136   1        for(i=0;i<1000;i++)
+  137   1        {
+  138   2          velocityOpenloop(bldc_set,0.5);
+  139   2        }
+  140   1        while(fabs(_normalizeAngle_PI(bldc_set->relative_angle))>0.004f)
+  141   1        {
+  142   2          velocityOpenloop(bldc_set,-0.5);
+  143   2        }
+  144   1        zero_electric_angle_CW=bldc_set->angle_elec;
+  145   1      //  printf("zero_electric_angle_CW=%f,%f\r\n",zero_electric_angle_CW,_normalizeAngle_PI(bldc_set->relative
+             -_angle));
+  146   1        bldc_set->zero_electric_angle=(zero_electric_angle_CW+zero_electric_angle_CCW)/2;
+  147   1        printf("BLDC zero_electric_angle=%f\r\n",bldc_set->zero_electric_angle);
+  148   1      }
+  149          
+  150          
+  151          /**
+  152           * @brief ¿ª»·ËÙ¶Èº¯Êı
+  153           * @param bldc_set µç»ú¶ÔÏó½á¹¹Ìå
+  154           * @param velocity Ä¿±êËÙ¶È
+  155          */
+  156          
+  157          void velocityOpenloop(BLDC *bldc_set,float velocity)
+  158          {
+  159   1        bldc_set->target_velocity=velocity;
+  160   1        bldc_set->Uq=bldc_set->voltage_power_supply/5;
+  161   1        //¼ÆËãÊ±¼äÖÜÆÚ
+  162   1        TR0 = 0;
+  163   1        bldc_set->Ts=(float)((TH0<<8)|TL0)/35*12*1e-6f;
+  164   1        TH0 = 0;
+  165   1        TL0 = 0;
+  166   1        TR0 = 1;
+  167   1      
+  168   1        bldc_set->current_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  169   1        bldc_set->diff_angle=bldc_set->current_angle-bldc_set->prev_angle;
+  170   1        if(fabs(bldc_set->diff_angle) > (0.8f*2*PI) ) bldc_set->current_full_rotations += ( bldc_set->diff_angl
+             -e > 0 ) ? -1 : 1;
+  171   1        bldc_set->angular_velocity= ((float)(bldc_set->current_full_rotations - bldc_set->prev_full_rotations) 
+             -* 2 * PI + (bldc_set->diff_angle) ) / bldc_set->Ts;
+  172   1        bldc_set->prev_angle=bldc_set->current_angle;
+  173   1        bldc_set->prev_full_rotations=bldc_set->current_full_rotations;
+  174   1        bldc_set->filtered_Velocity=lowPassFilter(&bldc_set->velocity_lowPassFilter,bldc_set->angular_velocity,
+             -bldc_set->Ts);
+  175   1      
+  176   1          //»ñÈ¡¾ø¶Ô½Ç¶ÈºÍÏà¶Ô½Ç¶È
+  177   1        bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
+  178   1        bldc_set->relative_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  179   1        bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
+  180   1        // Í¨¹ı³ËÒÔÊ±¼ä¼ä¸ôºÍÄ¿±êËÙ¶ÈÀ´¼ÆËãĞèÒª×ª¶¯µÄ»úĞµ½Ç¶È£¬´æ´¢ÔÚ shaft_angle ±äÁ¿ÖĞ¡£ÔÚ´ËÖ®Ç°£¬»¹ĞèÒª¶ÔÖá½
+             -Ç¶È½øĞĞ¹éÒ»»¯£¬ÒÔÈ·±£ÆäÖµÔÚ 0 µ½ 2¦Ğ Ö®¼ä¡£ 
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 4   
+
+  181   1        //ÒÔÄ¿±êËÙ¶ÈÎª 10 rad/s ÎªÀı£¬Èç¹ûÊ±¼ä¼ä¸ôÊÇ 1 Ãë£¬ÔòÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼Ó 10 * 1 = 10 »¡¶ÈµÄ½Ç¶È±ä»¯Á¿£¬
              -²ÅÄÜÊ¹µç»ú×ª¶¯µ½Ä¿±êËÙ¶È¡£
-   55   1        //Èç¹ûÊ±¼ä¼ä¸ôÊÇ 0.1 Ãë£¬ÄÇÃ´ÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼ÓµÄ½Ç¶È±ä»¯Á¿¾ÍÊÇ 10 * 0.1 = 1 »¡¶È£¬²ÅÄÜÊµÏÖÏàÍ¬µÄÄ¿±ê
+  182   1        //Èç¹ûÊ±¼ä¼ä¸ôÊÇ 0.1 Ãë£¬ÄÇÃ´ÔÚÃ¿¸öÑ­»·ÖĞĞèÒªÔö¼ÓµÄ½Ç¶È±ä»¯Á¿¾ÍÊÇ 10 * 0.1 = 1 »¡¶È£¬²ÅÄÜÊµÏÖÏàÍ¬µÄÄ¿±ê
              -ËÙ¶È¡£Òò´Ë£¬µç»úÖáµÄ×ª¶¯½Ç¶ÈÈ¡¾öÓÚÄ¿±êËÙ¶ÈºÍÊ±¼ä¼ä¸ôµÄ³Ë»ı¡£
-   56   1      //  bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*bldc_set->o
-             -plp_timestamp);
-   57   1        bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*Ts/35*12*1e-6f
-             -);
-   58   1        //¼ÆËãµç½Ç¶È
-   59   1        bldc_set->angle_elec=bldc_set->shaft_angle*bldc_set->pole_pairs;
-   60   1        //µç½Ç¶È¹éÒ»»¯
-   61   1        bldc_set->angle_elec = _normalizeAngle(bldc_set->angle_elec + bldc_set->zero_electric_angle);
-   62   1        // ÅÁ¿ËÄæ±ä»»
-   63   1        bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
-   64   1        bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
-   65   1        // ¿ËÀ­¿ËÄæ±ä»»
-   66   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
-   67   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
-   68   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
-   69   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
-   70   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   71   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   72   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
-   73   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
-   74   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
-   75   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
-   76   1        UpdatePwm(PWMA, &PWMA_Duty);
-   77   1      
-   78   1      }
-   79          
-   80          
+  183   1        bldc_set->shaft_angle = _normalizeAngle(bldc_set->shaft_angle + bldc_set->target_velocity*bldc_set->Ts);
+  184   1        //¼ÆËãµç½Ç¶È²¢¹éÒ»»¯
+  185   1        bldc_set->angle_elec = _normalizeAngle(bldc_set->shaft_angle*bldc_set->pole_pairs+ bldc_set->zero_elect
+             -ric_angle);
+  186   1        bldc_set->relative_angle_elec=_normalizeAngle(bldc_set->angle_elec-bldc_set->zero_electric_angle);
+  187   1        bldc_set->e=_normalizeAngle_PI(bldc_set->relative_angle_meg-bldc_set->relative_angle_elec);
+  188   1        // ÅÁ¿ËÄæ±ä»»
+  189   1        bldc_set->Ualpha =  -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  190   1        bldc_set->Ubeta =   bldc_set->Uq*cos(bldc_set->angle_elec); 
+  191   1        // ¿ËÀ­¿ËÄæ±ä»»
+  192   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  193   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  194   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  195   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  196   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  197   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  198   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  199   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  200   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  201   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+  202   1        UpdatePwm(PWMA, &PWMA_Duty);
+  203   1      }
+  204          /**
+  205           * @brief ¿ª»·µçÑ¹º¯Êı
+  206           * @param bldc_set µç»ú¶ÔÏó½á¹¹Ìå
+  207           * @param voltage ¸ø¶¨µçÑ¹Êä³ö
+  208          */
+  209          void voltageOpenloop (BLDC *bldc_set,int voltage)
+  210          {
+  211   1        // ¼ÆËãÔËËãÖÜÆÚ
+  212   1        TR0 = 0;
+  213   1        bldc_set->Ts=(TH0<<8)|TL0;
+  214   1        TH0 = 0;
+  215   1        TL0 = 0;
+  216   1        TR0 = 1;
+  217   1        //µçÑ¹¸øÖµÏŞ·ù
+  218   1        bldc_set->target_voltage=_constrain(voltage,-30000,30000);
+  219   1        //»ñÈ¡¾ø¶Ô½Ç¶ÈºÍÏà¶Ô½Ç¶È
+  220   1        bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
+  221   1        bldc_set->relative_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  222   1        bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
+  223   1        if(bldc_set->target_voltage)
+  224   1        {
+  225   2          bldc_set->angle_elec=_normalizeAngle((float)(bldc_set->pole_pairs*bldc_set->relative_angle)+bldc_set->z
+             -ero_electric_angle+PI_2);
+  226   2        }else{
+  227   2          bldc_set->angle_elec=_normalizeAngle((float)(bldc_set->pole_pairs*bldc_set->relative_angle)+bldc_set->z
+             -ero_electric_angle-PI_2);
+  228   2        }
+  229   1        bldc_set->relative_angle_elec=_normalizeAngle(bldc_set->angle_elec-bldc_set->zero_electric_angle);
+  230   1        bldc_set->e=_normalizeAngle_PI(bldc_set->relative_angle_meg-bldc_set->relative_angle_elec);
+  231   1        //¼ÆËãUqµçÑ¹Êä³ö
+  232   1        bldc_set->Uq=(float)(fabs(bldc_set->target_voltage)/30000)*(bldc_set->voltage_power_supply/3);
+  233   1        // ÅÁ¿ËÄæ±ä»»
+  234   1        bldc_set->Ualpha = -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  235   1        bldc_set->Ubeta = bldc_set->Uq*cos(bldc_set->angle_elec); 
+  236   1        // ¿ËÀ­¿ËÄæ±ä»»
+  237   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  238   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  239   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  240   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  241   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 5   
+
+  242   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  243   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  244   1        //PWMÍ¨µÀ¸³Öµ
+  245   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  246   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  247   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+  248   1        //PWM×´Ì¬¸üĞÂ
+  249   1        UpdatePwm(PWMA, &PWMA_Duty);
+  250   1      }
+  251          
+  252          
+  253          
+  254          
+  255          /**
+  256           * @brief ±Õ»·½Ç¶Èº¯Êı
+  257           * @param bldc_set µç»ú¶ÔÏó½á¹¹Ìå
+  258           * @param velocity Ä¿±ê½Ç¶È
+  259          */
+  260          void angleCloseloop (BLDC *bldc_set,float angle)
+  261          {
+  262   1        TR0 = 0;
+  263   1        bldc_set->Ts=(TH0<<8)|TL0;
+  264   1        TH0 = 0;
+  265   1        TL0 = 0;
+  266   1        TR0 = 1;
+  267   1        bldc_set->target_angle=angle;
+  268   1        //»ñÈ¡¾ø¶Ô½Ç¶È
+  269   1        bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
+  270   1        //»ñÈ¡Ïà¶Ô½Ç¶È
+  271   1        bldc_set->relative_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  272   1        //»ñÈ¡Ïà¶Ô´Å½Ç¶È
+  273   1        bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
+  274   1        bldc_set->target_voltage=PID_calc(&bldc_set->closeloop_angle_pid,bldc_set->absolute_angle,bldc_set->tar
+             -get_angle);
+  275   1        bldc_set->e=_normalizeAngle_PI(bldc_set->target_angle-bldc_set->absolute_angle);
+  276   1        
+  277   1        if(bldc_set->target_voltage>0)
+  278   1        {
+  279   2          bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle+PI_2);
+  280   2        }else{
+  281   2          bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle-PI_2);
+  282   2        }
+  283   1        bldc_set->relative_angle_elec=_normalizeAngle(bldc_set->angle_elec-bldc_set->zero_electric_angle);
+  284   1        //¼ÆËãUqµçÑ¹Êä³ö
+  285   1        bldc_set->Uq=fabs(bldc_set->target_voltage);
+  286   1        // ÅÁ¿ËÄæ±ä»»
+  287   1        bldc_set->Ualpha = -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  288   1        bldc_set->Ubeta = bldc_set->Uq*cos(bldc_set->angle_elec); 
+  289   1        // ¿ËÀ­¿ËÄæ±ä»»
+  290   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  291   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  292   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  293   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  294   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  295   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  296   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  297   1        //PWMÍ¨µÀ¸³Öµ
+  298   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  299   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  300   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+  301   1        //PWM×´Ì¬¸üĞÂ
+  302   1        UpdatePwm(PWMA, &PWMA_Duty);
+  303   1      }
+  304          
+  305          
+  306          /**
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 6   
+
+  307           * @brief ±Õ»·ËÙ¶Èº¯Êı
+  308           * @param bldc_set µç»ú¶ÔÏó½á¹¹Ìå
+  309           * @param velocity Ä¿±ê½ÇËÙ¶È
+  310          */
+  311          void velocityCloseloop (BLDC *bldc_set,float velocity)
+  312          {
+  313   1      
+  314   1        TR0 = 0;//¹Ø±Õ¶¨Ê±Æ÷0
+  315   1        //¶ÁÈ¡¶¨Ê±Æ÷Öµ
+  316   1        bldc_set->Ts=(float)((TH0<<8)|TL0)/35*12*1e-6f;
+  317   1        TH0 = 0;// ¶¨Ê±Æ÷ÖØ×°Öµ¸ß°ËÎ»Îª0
+  318   1        TL0 = 0;//¶¨Ê±Æ÷ÖØ×°ÖµµÍ°ËÎ»Îª0
+  319   1        TR0 = 1;//¿ªÆô¶¨Ê±Æ÷
+  320   1        bldc_set->target_velocity=velocity;
+  321   1        //¼ÆËã½ÇËÙ¶È
+  322   1        bldc_set->current_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  323   1        bldc_set->diff_angle=bldc_set->current_angle-bldc_set->prev_angle;
+  324   1        if(fabs(bldc_set->diff_angle) > (0.8f*2*PI) ) bldc_set->current_full_rotations += ( bldc_set->diff_angl
+             -e > 0 ) ? -1 : 1;
+  325   1        bldc_set->angular_velocity= ((float)(bldc_set->current_full_rotations - bldc_set->prev_full_rotations) 
+             -* 2 * PI + (bldc_set->diff_angle) ) / bldc_set->Ts;
+  326   1        bldc_set->prev_angle=bldc_set->current_angle;
+  327   1        bldc_set->prev_full_rotations=bldc_set->current_full_rotations;
+  328   1        bldc_set->filtered_Velocity=lowPassFilter(&bldc_set->velocity_lowPassFilter,bldc_set->angular_velocity,
+             -bldc_set->Ts);
+  329   1      
+  330   1        //»ñÈ¡Ïà¶Ô½Ç¶È
+  331   1        bldc_set->relative_angle=bldc_set->current_angle;
+  332   1        //»ñÈ¡Ïà¶Ô´Å½Ç¶È
+  333   1        bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
+  334   1         bldc_set->target_voltage=PID_calc(&bldc_set->closeloop_velocity_pid,bldc_set->filtered_Velocity,bldc_s
+             -et->target_velocity);
+  335   1        //»ñÈ¡Æ«²îÖµ
+  336   1         bldc_set->e=bldc_set->target_velocity-bldc_set->filtered_Velocity;
+  337   1        //¸ù¾İ¸ø¶¨µçÑ¹ÖµµÄÕı¸º¾ö¶¨ÏàÎ»²î½ÇµÄÕı¸º
+  338   1        if(bldc_set->target_voltage>0)
+  339   1        {
+  340   2          bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle+PI_2);
+  341   2        }else{
+  342   2          bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle-PI_2);
+  343   2        }
+  344   1        //ÇóÏà¶Ôµç½Ç¶È
+  345   1        bldc_set->relative_angle_elec=_normalizeAngle(bldc_set->angle_elec-bldc_set->zero_electric_angle);
+  346   1        //¼ÆËãUqµçÑ¹Êä³öÖµ
+  347   1        bldc_set->Uq=fabs(bldc_set->target_voltage);
+  348   1        // ÅÁ¿ËÄæ±ä»»
+  349   1        bldc_set->Ualpha = -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  350   1        bldc_set->Ubeta = bldc_set->Uq*cos(bldc_set->angle_elec); 
+  351   1        // ¿ËÀ­¿ËÄæ±ä»»
+  352   1        bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  353   1        bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  354   1        bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  355   1        //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  356   1        bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  357   1        bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  358   1        bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  359   1        //PWMÍ¨µÀ¸³Öµ
+  360   1        PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  361   1        PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  362   1        PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+  363   1        //PWM×´Ì¬¸üĞÂ
+  364   1        UpdatePwm(PWMA, &PWMA_Duty);
+  365   1      }
+  366          
+  367          
+  368          
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 7   
+
+  369          
+  370          //void angleCascadeloop (BLDC *bldc_set,float angle)
+  371          //{
+  372          //  TR0 = 0;
+  373          //  bldc_set->Ts=(TH0<<8)|TL0;
+  374          //  TH0 = 0;
+  375          //  TL0 = 0;
+  376          //  TR0 = 1;
+  377          //  bldc_set->target_angle=angle;
+  378          //  //»ñÈ¡¾ø¶Ô½Ç¶È
+  379          //  bldc_set->absolute_angle=_AS5600_get_absolute_angle()*bldc_set->dir;
+  380          //  //»ñÈ¡Ïà¶Ô½Ç¶È
+  381          //  bldc_set->relative_angle=_normalizeAngle(_AS5600_getAngle_Without_track()*bldc_set->dir);
+  382          //  //»ñÈ¡Ïà¶Ô´Å½Ç¶È
+  383          //  bldc_set->relative_angle_meg=_normalizeAngle(bldc_set->pole_pairs*bldc_set->relative_angle);
+  384          //  bldc_set->target_voltage=PID_calc(&bldc_set->closeloop_angle_pid,bldc_set->absolute_angle,bldc_set->t
+             -arget_angle);
+  385          //  bldc_set->e=_normalizeAngle_PI(bldc_set->target_angle-bldc_set->absolute_angle);
+  386          //  
+  387          //  if(bldc_set->target_voltage>0)
+  388          //  {
+  389          //    bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle+PI_2)
+             -;
+  390          //  }else{
+  391          //    bldc_set->angle_elec=_normalizeAngle(bldc_set->relative_angle_meg+bldc_set->zero_electric_angle-PI_2)
+             -;
+  392          //  }
+  393          //  bldc_set->relative_angle_elec=_normalizeAngle(bldc_set->angle_elec-bldc_set->zero_electric_angle);
+  394          //  //¼ÆËãUqµçÑ¹Êä³ö
+  395          //  bldc_set->Uq=fabs(bldc_set->target_voltage);
+  396          //  // ÅÁ¿ËÄæ±ä»»
+  397          //  bldc_set->Ualpha = -bldc_set->Uq*sin(bldc_set->angle_elec); 
+  398          //  bldc_set->Ubeta = bldc_set->Uq*cos(bldc_set->angle_elec); 
+  399          //  // ¿ËÀ­¿ËÄæ±ä»»
+  400          //  bldc_set->Ua = bldc_set->Ualpha + bldc_set->voltage_power_supply/2;
+  401          //  bldc_set->Ub = (sqrt(3)*bldc_set->Ubeta-bldc_set->Ualpha)/2 + bldc_set->voltage_power_supply/2;
+  402          //  bldc_set->Uc = (-bldc_set->Ualpha-sqrt(3)*bldc_set->Ubeta)/2 + bldc_set->voltage_power_supply/2;
+  403          //  //ÉèÖÃ¸÷ÏàµÄÕ¼¿Õ±È
+  404          //  bldc_set->dc_a = _constrain(bldc_set->Ua / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  405          //  bldc_set->dc_b = _constrain(bldc_set->Ub / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  406          //  bldc_set->dc_c = _constrain(bldc_set->Uc / bldc_set->voltage_power_supply, 0.0f , 1.0f );
+  407          //  //PWMÍ¨µÀ¸³Öµ
+  408          //  PWMA_Duty.PWM1_Duty=(u16)(bldc_set->dc_a*2047);
+  409          //  PWMA_Duty.PWM2_Duty=(u16)(bldc_set->dc_b*2047);
+  410          //  PWMA_Duty.PWM3_Duty=(u16)(bldc_set->dc_c*2047);
+  411          //  //PWM×´Ì¬¸üĞÂ
+  412          //  UpdatePwm(PWMA, &PWMA_Duty);
+  413          //}
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-  code size            =       840     ------
+  code size            =      5491     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
   pdata size           =    ------     ------
-  xdata size           =        65          4
+  xdata size           =       850         26
   xdata-const size     =    ------     ------
   edata size           =    ------     ------
   bit size             =    ------     ------
@@ -118,8 +475,10 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =    ------     ------
+C251 COMPILER V5.60.0,  BLDC                                                               01/07/23  22:19:02  PAGE 8   
+
+  hconst size          =        82     ------
 End of Module Information.
 
 
-C251 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

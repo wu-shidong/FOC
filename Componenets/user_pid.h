@@ -1,50 +1,97 @@
-/****************************************************************************
- *  Copyright (C) 2018 RoboMaster.
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
- ***************************************************************************/
- 
-#ifndef _USER_PID_H
-#define _USER_PID_H
-
-#include "main.h"
-#define LIMIT_MIN_MAX(x,min,max) (x) = (((x)<=(min))?(min):(((x)>=(max))?(max):(x)))
-typedef struct _pid_struct_t
+/**
+  ********************************************************
+  * @file       pid.c/h
+  * @brief      pid实现函数，包括初始化，PID计算函数，
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Dec-26-2022     吴世栋              完成
+  *
+  @verbatim
+  ========================================================
+  =========================================================
+  @endverbatim
+  ********************************************************
+  */
+#ifndef USER_PID_H
+#define USER_PID_H
+#include "type_def.h"
+enum PID_MODE
 {
-  float kp;
-  float ki;
-  float kd;
-  float i_max;
-  float out_max;
-  
-  float ref;      // target value
-  float fdb;      // feedback value
-  float err[2];   // error and last error
+    PID_POSITION = 0,
+    PID_DELTA
+};
 
-  float p_out;
-  float i_out;
-  float d_out;
-  float output;
-}pid_struct_t;
+typedef struct
+{
+    u8 mode;
+    //PID 三参数
+    fp32 Kp;
+    fp32 Ki;
+    fp32 Kd;
 
-void pid_init(pid_struct_t *pid,
-              float kp,
-              float ki,
-              float kd,
-              float i_max,
-              float out_max);
-              
-float  pid_calc(pid_struct_t *pid, float ref, float fdb);
+    fp32 max_out;  //最大输出
+    fp32 max_iout; //最大积分输出
+
+    fp32 set;
+    fp32 fdb;
+
+    fp32 out;
+    fp32 Pout;
+    fp32 Iout;
+    fp32 Dout;
+    fp32 Dbuf[3];  //微分项 0最新 1上一次 2上上次
+    fp32 error[3]; //误差项 0最新 1上一次 2上上次
+
+} pid_type_def;
+/**
+  * @brief          pid struct data init
+  * @param[out]     pid: PID struct data point
+  * @param[in]      mode: PID_POSITION: normal pid
+  *                 PID_DELTA: delta pid
+  * @param[in]      PID: 0: kp, 1: ki, 2:kd
+  * @param[in]      max_out: pid max out
+  * @param[in]      max_iout: pid max iout
+  * @retval         none
+  */
+/**
+  * @brief          pid struct data init
+  * @param[out]     pid: PID结构数据指针
+  * @param[in]      mode: PID_POSITION:普通PID
+  *                 PID_DELTA: 差分PID
+  * @param[in]      PID: 0: kp, 1: ki, 2:kd
+  * @param[in]      max_out: pid最大输出
+  * @param[in]      max_iout: pid最大积分输出
+  * @retval         none
+  */
+extern void PID_init(pid_type_def *pid, u8 mode,fp32 PID[3], fp32 max_out, fp32 max_iout);
+
+/**
+  * @brief          pid calculate 
+  * @param[out]     pid: PID struct data point
+  * @param[in]      ref: feedback data 
+  * @param[in]      set: set point
+  * @retval         pid out
+  */
+/**
+  * @brief          pid计算
+  * @param[out]     pid: PID结构数据指针
+  * @param[in]      ref: 反馈数据
+  * @param[in]      set: 设定值
+  * @retval         pid输出
+  */
+extern fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set);
+
+/**
+  * @brief          pid out clear
+  * @param[out]     pid: PID struct data point
+  * @retval         none
+  */
+/**
+  * @brief          pid 输出清除
+  * @param[out]     pid: PID结构数据指针
+  * @retval         none
+  */
+extern void PID_clear(pid_type_def *pid);
 
 #endif

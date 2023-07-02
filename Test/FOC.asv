@@ -1,0 +1,24 @@
+function normalizedAngle = normalizeAngle(angle)
+if angle>=0
+  normalizedAngle=angle;
+else
+  normalizedAngle=angle+2*3.14159;
+end
+
+
+
+
+
+
+
+angle_el = linspace(0, 10*pi, 3600);
+
+angle_el = normalizeAngle(angle_el);
+  % 帕克逆变换
+  Ualpha =  -Uq*sin(angle_el); 
+  Ubeta =   Uq*cos(angle_el); 
+
+  % 克拉克逆变换
+  Ua = Ualpha + voltage_power_supply/2;
+  Ub = (sqrt(3)*Ubeta-Ualpha)/2 + voltage_power_supply/2;
+  Uc = (-Ualpha-sqrt(3)*Ubeta)/2 + voltage_power_supply/2;

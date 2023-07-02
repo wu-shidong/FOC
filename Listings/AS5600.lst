@@ -1,0 +1,82 @@
+C251 COMPILER V5.60.0,  AS5600                                                             01/07/23  18:31:47  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE AS5600
+OBJECT MODULE PLACED IN .\Objects\AS5600.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Devices\AS5600.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Compo
+                    -nenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\AS5600.lst) TABS(2) OBJECT(.\Objects\AS5600.obj) 
+
+stmt  level    source
+
+    1          #include "AS5600.h"
+    2          #include "bsp_i2c.h"
+    3          #define M_PI        3.1415926f
+    4          AS5600 as5600;
+    5          
+    6          
+    7          void AS5600_init (void)
+    8          {
+    9   1          as5600.previous_angle = 0.0;
+   10   1          as5600.revolutions = 0;
+   11   1      }
+   12          
+   13          unsigned int _AS5600_get_encode(void)
+   14          {
+   15   1          I2C_ReadNbyte(0x36<<1,0x0C, &as5600.str, 2);
+*** WARNING C98 IN LINE 15 OF Devices\AS5600.c: parameter 3: pointer to different objects
+   16   1          as5600.encode=((u16)as5600.str[0]<<8)|(u16)as5600.str[1];
+   17   1          return as5600.encode;
+   18   1      }
+   19          float _AS5600_getAngle_Without_track(void)
+   20          {
+   21   1        I2C_ReadNbyte(0x36<<1,0x0C, &as5600.str, 2);
+*** WARNING C98 IN LINE 21 OF Devices\AS5600.c: parameter 3: pointer to different objects
+   22   1        as5600.encode =((u16)as5600.str[0]<<8)|(u16)as5600.str[1];
+   23   1        as5600.current_angle  =(float)as5600.encode/2048*3.1415f;
+   24   1        return as5600.current_angle;
+   25   1      }
+   26          
+   27          
+   28          float _AS5600_get_absolute_angle(void)
+   29          {
+   30   1          static float angle_change=0;
+   31   1          I2C_ReadNbyte(0x36<<1,0x0C, &as5600.str, 2);
+*** WARNING C98 IN LINE 31 OF Devices\AS5600.c: parameter 3: pointer to different objects
+   32   1          as5600.encode =((u16)as5600.str[0]<<8)|(u16)as5600.str[1];
+   33   1          as5600.current_angle  =(float)as5600.encode/2048*3.1415f;  
+   34   1          angle_change = as5600.current_angle - as5600.previous_angle;
+   35   1          if (angle_change < -M_PI) {
+   36   2              as5600.revolutions++;
+   37   2          } else if (angle_change > M_PI) {
+   38   2              as5600.revolutions--;
+   39   2          }
+   40   1          as5600.absolute_angle = as5600.current_angle + (2 * M_PI * as5600.revolutions);
+   41   1          as5600.previous_angle = as5600.current_angle;
+   42   1          return as5600.absolute_angle;
+   43   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       406     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        24     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+C251 COMPILER V5.60.0,  AS5600                                                             01/07/23  18:31:47  PAGE 2   
+
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =         9     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

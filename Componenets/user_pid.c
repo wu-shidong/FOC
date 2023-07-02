@@ -1,62 +1,139 @@
-/****************************************************************************
- *  Copyright (C) 2018 RoboMaster.
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program. If not, see <http://www.gnu.org/licenses/>.
- ***************************************************************************/
- 
+/**
+  ****************************************************************************
+  * @file       pid.c/h
+  * @brief      pid实现函数，包括初始化，PID计算函数，
+  * @note       
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     Dec-26-2022     吴世栋              完成
+  *
+  @verbatim
+  ==============================================================================
+
+  ==============================================================================
+  @endverbatim
+  ****************************************************************************
+  */
+
 #include "user_pid.h"
 
+
+#define LimitMax(input, max)   \
+    {                          \
+        if (input > max)       \
+        {                      \
+            input = max;       \
+        }                      \
+        else if (input < -max) \
+        {                      \
+            input = -max;      \
+        }                      \
+    }
+
 /**
-  * @brief  init pid parameter
-  * @param  pid struct
-    @param  parameter
-  * @retval None
+  * @brief          pid struct data init
+  * @param[out]     pid: PID struct data point
+  * @param[in]      mode: PID_POSITION: normal pid
+  *                 PID_DELTA: delta pid
+  * @param[in]      PID: 0: kp, 1: ki, 2:kd
+  * @param[in]      max_out: pid max out
+  * @param[in]      max_iout: pid max iout
+  * @retval         none
   */
-void pid_init(pid_struct_t *pid,
-              float kp,
-              float ki,
-              float kd,
-              float i_max,
-              float out_max)
+/**
+  * @brief          pid struct data init
+  * @param[out]     pid: PID结构数据指针
+  * @param[in]      mode: PID_POSITION:普通PID
+  *                 PID_DELTA: 差分PID
+  * @param[in]      PID: 0: kp, 1: ki, 2:kd
+  * @param[in]      max_out: pid最大输出
+  * @param[in]      max_iout: pid最大积分输出
+  * @retval         none
+  */
+void PID_init(pid_type_def *pid, u8 mode, fp32 PID[3], fp32 max_out, fp32 max_iout)
 {
-  pid->kp      = kp;
-  pid->ki      = ki;
-  pid->kd      = kd;
-  pid->i_max   = i_max;
-  pid->out_max = out_max;
+
+    pid->mode = mode;
+    pid->Kp = PID[0];
+    pid->Ki = PID[1];
+    pid->Kd = PID[2];
+    pid->max_out = max_out;
+    pid->max_iout = max_iout;
+    pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
+    pid->error[0] = pid->error[1] = pid->error[2] = pid->Pout = pid->Iout = pid->Dout = pid->out = 0.0f;
 }
 
 /**
-  * @brief  pid calculation
-  * @param  pid struct
-    @param  reference value
-    @param  feedback value
-  * @retval calculation result
+  * @brief          pid calculate 
+  * @param[out]     pid: PID struct data point
+  * @param[in]      ref: feedback data 
+  * @param[in]      set: set point
+  * @retval         pid out
   */
-float pid_calc(pid_struct_t *pid, float ref, float fdb)
+/**
+  * @brief          pid计算
+  * @param[out]     pid: PID结构数据指针
+  * @param[in]      ref: 反馈数据
+  * @param[in]      set: 设定值
+  * @retval         pid输出
+  */
+fp32 PID_calc(pid_type_def *pid, fp32 ref, fp32 set)
 {
-  pid->ref = ref;
-  pid->fdb = fdb;
-  pid->err[1] = pid->err[0];
-  pid->err[0] = pid->ref - pid->fdb;
-  
-  pid->p_out  = pid->kp * pid->err[0];
-  pid->i_out += pid->ki * pid->err[0];
-  pid->d_out  = pid->kd * (pid->err[0] - pid->err[1]);
-  LIMIT_MIN_MAX(pid->i_out, -pid->i_max, pid->i_max);
-  
-  pid->output = pid->p_out + pid->i_out + pid->d_out;
-  LIMIT_MIN_MAX(pid->output, -pid->out_max, pid->out_max);
-  return pid->output;
+    if (pid == NULL)
+    {
+        return 0.0f;
+    }
+
+    pid->error[2] = pid->error[1];
+    pid->error[1] = pid->error[0];
+    pid->set = set;
+    pid->fdb = ref;
+    pid->error[0] = set - ref;
+    if (pid->mode == PID_POSITION)
+    {
+        pid->Pout = pid->Kp * pid->error[0];
+        pid->Iout += pid->Ki * pid->error[0];
+        pid->Dbuf[2] = pid->Dbuf[1];
+        pid->Dbuf[1] = pid->Dbuf[0];
+        pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
+        pid->Dout = pid->Kd * pid->Dbuf[0];
+        LimitMax(pid->Iout, pid->max_iout);
+        pid->out = pid->Pout + pid->Iout + pid->Dout;
+        LimitMax(pid->out, pid->max_out);
+    }
+    else if (pid->mode == PID_DELTA)
+    {
+        pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
+        pid->Iout = pid->Ki * pid->error[0];
+        pid->Dbuf[2] = pid->Dbuf[1];
+        pid->Dbuf[1] = pid->Dbuf[0];
+        pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+        pid->Dout = pid->Kd * pid->Dbuf[0];
+        pid->out += pid->Pout + pid->Iout + pid->Dout;
+        LimitMax(pid->out, pid->max_out);
+    }
+    return pid->out;
+}
+
+/**
+  * @brief          pid out clear
+  * @param[out]     pid: PID struct data point
+  * @retval         none
+  */
+/**
+  * @brief          pid 输出清除
+  * @param[out]     pid: PID结构数据指针
+  * @retval         none
+  */
+void PID_clear(pid_type_def *pid)
+{
+    if (pid == NULL)
+    {
+        return;
+    }
+
+    pid->error[0] = pid->error[1] = pid->error[2] = 0.0f;
+    pid->Dbuf[0] = pid->Dbuf[1] = pid->Dbuf[2] = 0.0f;
+    pid->out = pid->Pout = pid->Iout = pid->Dout = 0.0f;
+    pid->fdb = pid->set = 0.0f;
 }

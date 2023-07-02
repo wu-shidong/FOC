@@ -1,10 +1,10 @@
-C251 COMPILER V5.60.0,  STC32G_Delay                                                       28/06/23  22:56:29  PAGE 1   
+C251 COMPILER V5.60.0,  STC32G_Delay                                                       01/07/23  18:31:46  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE STC32G_Delay
 OBJECT MODULE PLACED IN .\Objects\STC32G_Delay.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Lib\STC32G_Delay.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Com
-                    -ponenets;.\Lib) DEBUG PRINT(.\Listings\STC32G_Delay.lst) TABS(2) OBJECT(.\Objects\STC32G_Delay.obj) 
+                    -ponenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\STC32G_Delay.lst) TABS(2) OBJECT(.\Objects\STC32G_Delay.obj) 
 
 stmt  level    source
 

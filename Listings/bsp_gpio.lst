@@ -1,10 +1,10 @@
-C251 COMPILER V5.60.0,  bsp_gpio                                                           28/06/23  22:56:28  PAGE 1   
+C251 COMPILER V5.60.0,  bsp_gpio                                                           01/07/23  18:31:45  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_gpio
 OBJECT MODULE PLACED IN .\Objects\bsp_gpio.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Bsp\bsp_gpio.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Compone
-                    -nets;.\Lib) DEBUG PRINT(.\Listings\bsp_gpio.lst) TABS(2) OBJECT(.\Objects\bsp_gpio.obj) 
+                    -nets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\bsp_gpio.lst) TABS(2) OBJECT(.\Objects\bsp_gpio.obj) 
 
 stmt  level    source
 
@@ -22,7 +22,8 @@ stmt  level    source
    10   1        GPIO_Inilize(GPIO_P6,&GPIO_InitStructure);  //初始化
    11   1      
    12   1      //UART1
-   13   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1;    //指定要初始化的IO, GPIO_Pin_0 ~ GPIO_Pin_7
+   13   1        GPIO_InitStructure.Pin  = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;    //指定要初始化的IO, GPIO_P
+             -in_0 ~ GPIO_Pin_7
    14   1        GPIO_InitStructure.Mode = GPIO_PullUp;  //指定IO的输入或输出方式,GPIO_PullUp,GPIO_HighZ,GPIO_OUT_OD,GPIO_
              -OUT_PP
    15   1        GPIO_Inilize(GPIO_P3,&GPIO_InitStructure);  //初始化

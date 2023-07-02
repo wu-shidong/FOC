@@ -29,6 +29,7 @@ typedef signed long     int32;  // 32 bits
 typedef unsigned char   uint8;  //  8 bits 
 typedef unsigned int    uint16; // 16 bits 
 typedef unsigned long   uint32; // 32 bits 
+typedef float fp32;
 
 //========================================================================
 

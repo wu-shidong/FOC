@@ -1,1 +1,1 @@
-"Application\BLDC.c" LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\Lib) DEBUG PRINT(.\Listings\BLDC.lst) TABS (2) OBJECT(.\Objects\BLDC.obj)
+"Application\BLDC.c" LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\BLDC.lst) TABS (2) OBJECT(.\Objects\BLDC.obj)

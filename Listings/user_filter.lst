@@ -1,0 +1,60 @@
+C251 COMPILER V5.60.0,  user_filter                                                        01/07/23  19:02:32  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE user_filter
+OBJECT MODULE PLACED IN .\Objects\user_filter.obj
+COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Componenets\user_filter.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bs
+                    -p;.\Componenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\user_filter.lst) TABS(2) OBJECT(.\Objects\user_filter.obj) 
+
+stmt  level    source
+
+    1          #include "user_filter.h"
+    2          
+    3          // 初始化低通滤波器
+    4          void initLowPassFilter(LowPassFilter* filter, float Tf) 
+    5          {
+    6   1          filter->y_prev = 0.0f;
+    7   1          filter->Tf = Tf;
+    8   1      }
+    9          // 速度低通滤波函数
+   10          float lowPassFilter(LowPassFilter* filter, float x, float dt)
+   11          {
+   12   1          static float y,alpha;
+   13   1          if (dt < 0.0f)
+   14   1          {
+   15   2              dt = 1e-3f;
+   16   2          }
+   17   1          else if (dt > 0.3f)
+   18   1          {
+   19   2              filter->y_prev = x;
+   20   2              return x;
+   21   2          }
+   22   1          alpha = filter->Tf / (filter->Tf + dt);
+   23   1          y = alpha * filter->y_prev + (1.0f - alpha) * x;
+   24   1          filter->y_prev = y;
+   25   1          return y;
+   26   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       177     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =         8          4
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

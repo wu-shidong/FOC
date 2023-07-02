@@ -1,1 +1,0 @@
-"Bsp\bsp_pwm.c" LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\Lib) DEBUG PRINT(.\Listings\bsp_pwm.lst) TABS (2) OBJECT(.\Objects\bsp_pwm.obj)

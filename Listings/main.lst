@@ -1,75 +1,92 @@
-C251 COMPILER V5.60.0,  main                                                               28/06/23  23:26:12  PAGE 1   
+C251 COMPILER V5.60.0,  main                                                               01/07/23  22:19:46  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE main
 OBJECT MODULE PLACED IN .\Objects\main.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE main.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Componenets;.\L
-                    -ib) DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj) 
+                    -ib;.\Devices) DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj) 
 
 stmt  level    source
 
     1          #include "config.h"
     2          #include "main.h"
-    3          #include "STC32G_Delay.h"
+    3          #include "bsp_delay.h"
     4          #include "bsp_tim.h"
     5          #include "bsp_gpio.h"
     6          #include "bsp_uart.h"
     7          #include "bsp_pwm.h"
-    8          #include "BLDC.h"
-    9          void RCC_init(void);
-   10          
-   11          
-   12          unsigned int cnt1;
-   13          unsigned int cnt2;
-   14          unsigned int dim;
-   15          unsigned int i;
-   16          void main(void)
-   17          {
-   18   1      
-   19   1        RCC_init();
-   20   1        GPIO_config();
-   21   1        UART_config();
-   22   1        Timer_config();
-   23   1        PWM_config();
-   24   1        bldc_openloop_init(&bldc_oplp,16,7);
-   25   1        EA = 1;
-   26   1        while (1)
-   27   1        {
-   28   2      
-   29   2      //  TR0 = 0;
-   30   2      //  cnt1=(TH0<<8)|TL0;
-   31   2      //  TH0 = 0;
-   32   2      //  TL0 = 0;
-   33   2      //  TR0 = 1;
-   34   2      //  printf("%u\r\n",cnt1/35*12);
-   35   2      //  delay_ms(2);
-   36   2        //velocityOpenloop(&bldc_oplp);
-   37   2        //P67=~P67;
-   38   2        velocityOpenloop(&bldc_oplp); 
-   39   2      //  velocityOpenloop(&bldc_oplp); 
-   40   2      //  velocityOpenloop(&bldc_oplp);
-   41   2      
-   42   2          
-   43   2        }
-   44   1      }
-   45          
-   46          
-   47          
-   48          void RCC_init(void)
-   49          {
-   50   1        WTST = 0;
-   51   1        EAXSFR();   //扩展SFR(XFR)访问使能 
-   52   1        CKCON = 0;      //提高访问XRAM速度
-   53   1      }
-   54          
-   55          
+    8          #include "bsp_i2c.h"
+    9          #include "BLDC.h"
+   10          #include "AS5600.h"
+   11          /*
+   12                             _ooOoo_
+   13                            o8888888o
+   14                            88" . "88
+   15                            (| -_- |)
+   16                            O\  =  /O
+   17                         ____/`---'\____
+   18                       .'  \\|     |//  `.
+   19                      /  \\|||  :  |||//  \
+   20                     /  _||||| -:- |||||-  \
+   21                     |   | \\\  -  /// |   |
+   22                     | \_|  ''\---/''  |   |
+   23                     \  .-\__  `-`  ___/-. /
+   24                   ___`. .'  /--.--\  `. . __
+   25                ."" '<  `.___\_<|>_/___.'  >'"".
+   26               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+   27               \  \ `-.   \_ __\ /__ _/   .-` /  /
+   28          ======`-.____`-.___\_____/___.-`____.-'======
+   29                             `=---='
+   30          */
+   31          void RCC_init(void);
+   32          
+   33          unsigned int encode;
+   34          float angle;
+   35          unsigned int cnt;
+   36          void main(void)
+   37          {
+   38   1      
+   39   1        RCC_init();
+   40   1        GPIO_config();
+   41   1        UART_config();
+   42   1        Timer_config();
+   43   1        PWM_config();
+   44   1        I2C_config();
+   45   1        AS5600_init();
+   46   1        EA = 1;
+   47   1        bldc_init(&bldc_clslp,16,7);
+   48   1      //  bldc_clslp_init(&bldc_clslp);
+   49   1        cnt=0;
+   50   1        while (1)
+   51   1        {
+   52   2          cnt++;
+   53   2          if(cnt==100)
+   54   2          {
+   55   3            cnt=0;
+   56   3            printf("v:%f,fv:%f,e:%f,rl:%f\r\n",bldc_clslp.angular_velocity,bldc_clslp.filtered_Velocity,bldc_clslp
+             -.e,bldc_clslp.diff_angle);
+   57   3          }
+C251 COMPILER V5.60.0,  main                                                               01/07/23  22:19:46  PAGE 2   
+
+   58   2          velocityOpenloop(&bldc_clslp,-3);
+   59   2        }
+   60   1      }
+   61          
+   62          
+   63          
+   64          void RCC_init(void)
+   65          {
+   66   1        WTST = 0;
+   67   1        EAXSFR();   //扩展SFR(XFR)访问使能 
+   68   1        CKCON = 0;      //提高访问XRAM速度
+   69   1      }
+   70          
+   71          
 
 
 Module Information          Static   Overlayable
 ------------------------------------------------
-C251 COMPILER V5.60.0,  main                                                               28/06/23  23:26:12  PAGE 2   
-
-  code size            =        71     ------
+  code size            =       214     ------
   ecode size           =    ------     ------
   data size            =    ------     ------
   idata size           =    ------     ------
@@ -84,7 +101,7 @@ Module Information          Static   Overlayable
   far data size        =    ------     ------
   huge data size       =    ------     ------
   const size           =    ------     ------
-  hconst size          =    ------     ------
+  hconst size          =        24     ------
 End of Module Information.
 
 

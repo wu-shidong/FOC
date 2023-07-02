@@ -272,7 +272,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\Application;.\Bsp;.\Componenets;.\Lib</IncludePath>
+              <IncludePath>.\Application;.\Bsp;.\Componenets;.\Lib;.\Devices</IncludePath>
             </VariousControls>
           </C251>
           <Ax51>
@@ -292,11 +292,11 @@
             <linkonly>0</linkonly>
             <UseMemoryFromTarget>1</UseMemoryFromTarget>
             <CaseSensitiveSymbols>1</CaseSensitiveSymbols>
-            <WarningLevel>2</WarningLevel>
+            <WarningLevel>0</WarningLevel>
             <DataOverlaying>1</DataOverlaying>
             <OverlayString></OverlayString>
             <MiscControls></MiscControls>
-            <DisableWarningNumbers>57</DisableWarningNumbers>
+            <DisableWarningNumbers>57,98</DisableWarningNumbers>
             <LinkerCmdFile></LinkerCmdFile>
             <Assign></Assign>
             <ReserveString></ReserveString>
@@ -339,6 +339,11 @@
               <FileType>1</FileType>
               <FilePath>.\Componenets\user_pid.c</FilePath>
             </File>
+            <File>
+              <FileName>user_filter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Componenets\user_filter.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -363,6 +368,16 @@
               <FileName>bsp_pwm.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Bsp\bsp_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Bsp\bsp_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Bsp\bsp_delay.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -423,6 +438,26 @@
               <FileName>STC32G_PWM_Isr.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Lib\STC32G_PWM_Isr.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_I2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>STC32G_I2C_Isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Lib\STC32G_I2C_Isr.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>devices</GroupName>
+          <Files>
+            <File>
+              <FileName>AS5600.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Devices\AS5600.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,10 +1,10 @@
-C251 COMPILER V5.60.0,  STC32G_GPIO                                                        28/06/23  22:56:29  PAGE 1   
+C251 COMPILER V5.60.0,  STC32G_GPIO                                                        01/07/23  18:31:46  PAGE 1   
 
 
 C251 COMPILER V5.60.0, COMPILATION OF MODULE STC32G_GPIO
 OBJECT MODULE PLACED IN .\Objects\STC32G_GPIO.obj
 COMPILER INVOKED BY: D:\Keil_v5\C251\BIN\C251.EXE Lib\STC32G_GPIO.c LARGE INTR2 BROWSE INCDIR(.\Application;.\Bsp;.\Comp
-                    -onenets;.\Lib) DEBUG PRINT(.\Listings\STC32G_GPIO.lst) TABS(2) OBJECT(.\Objects\STC32G_GPIO.obj) 
+                    -onenets;.\Lib;.\Devices) DEBUG PRINT(.\Listings\STC32G_GPIO.lst) TABS(2) OBJECT(.\Objects\STC32G_GPIO.obj) 
 
 stmt  level    source
 
@@ -66,7 +66,7 @@ stmt  level    source
    56   1        {
    57   2          if(GPIOx->Mode == GPIO_PullUp)    P4M1 &= ~GPIOx->Pin,  P4M0 &= ~GPIOx->Pin;   //上拉准双向口
    58   2          if(GPIOx->Mode == GPIO_HighZ)     P4M1 |=  GPIOx->Pin,  P4M0 &= ~GPIOx->Pin;   //浮空输入
-C251 COMPILER V5.60.0,  STC32G_GPIO                                                        28/06/23  22:56:29  PAGE 2   
+C251 COMPILER V5.60.0,  STC32G_GPIO                                                        01/07/23  18:31:46  PAGE 2   
 
    59   2          if(GPIOx->Mode == GPIO_OUT_OD)    P4M1 |=  GPIOx->Pin,  P4M0 |=  GPIOx->Pin;   //开漏输出
    60   2          if(GPIOx->Mode == GPIO_OUT_PP)    P4M1 &= ~GPIOx->Pin,  P4M0 |=  GPIOx->Pin;   //推挽输出
